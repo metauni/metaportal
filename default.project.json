@@ -1,0 +1,41 @@
+{
+	"name": "metaportal",
+	"tree": {
+		"$className": "DataModel",
+
+		"ReplicatedStorage": {
+			"$ignoreUnknownInstances": true,
+			"$className": "ReplicatedStorage",
+			"MetaPortalCommon": {
+				"$path": "src/common"
+			}
+		},
+
+		"ServerScriptService": {
+			"$ignoreUnknownInstances": true,
+			"$className": "ServerScriptService",
+			"metaportal": {
+				"$className": "Folder",
+				"$path": "src/server"
+			}
+		},
+
+		"StarterPlayer": {
+			"$ignoreUnknownInstances": true,
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$ignoreUnknownInstances": true,
+				"$className": "StarterPlayerScripts",
+				"MetaPortalPlayer" : {
+					"$path": "src/client"
+				}
+			}
+		},
+
+		"StarterGui": {
+			"$className": "StarterGui",
+			"$ignoreUnknownInstances": true,
+			"$path": "src/gui"
+		}
+	}
+}

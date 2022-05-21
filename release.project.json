@@ -1,0 +1,19 @@
+{
+	"name": "metaportal",
+	"tree": {
+		"$className": "Folder",
+		"$path": "src/server",
+
+		"MetaPortalCommon": {
+			"$path": "src/common"
+		},
+
+		"MetaPortalPlayer" : {
+			"$path": "src/client"
+		},
+
+		"MetaPortalGui" : {
+			"$path": "src/gui"
+		}
+	}
+}

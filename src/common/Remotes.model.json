@@ -1,0 +1,33 @@
+{
+	"ClassName": "Folder",
+	"Children": [
+		{
+			"Name": "AddGhost",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "Arrive",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "Bookmark",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "CreatePocket",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "FirePortal",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "Goto",
+			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "PocketPermission",
+			"ClassName": "RemoteEvent"
+		}
+	]
+}
