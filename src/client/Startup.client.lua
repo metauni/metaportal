@@ -138,17 +138,24 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
 	icon:setLabel("Pockets")
-	icon:bindEvent("selected", function(self)
-		--self:deselect()
-		--icon:deselect()
-		gotoPortalGui.Enabled = true
-		wait(0.1)
-		gotoPortalGui.TextBox:CaptureFocus()
-	end)
-	icon:bindEvent("deselected", function(self)
-		gotoPortalGui.Enabled = false
-	end)
-	icon:bindToggleKey(Config.ShortcutKey)
+	icon:set("dropdownSquareCorners", true)
+	icon:setDropdown({
+		Icon.new()
+		:setLabel("Goto Pocket")
+		:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			--self:deselect()
+			--icon:deselect()
+			gotoPortalGui.Enabled = true
+			wait(0.1)
+			gotoPortalGui.TextBox:CaptureFocus()
+		end)
+		:bindEvent("deselected", function(self)
+			gotoPortalGui.Enabled = false
+		end)
+		:bindToggleKey(Config.ShortcutKey)
+	})
 	icon:setTheme(Themes["BlueGradient"])
 	
 	gotoPortalGui.Changed:Connect(function()
@@ -156,17 +163,6 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			icon:deselect()
 		end
 	end)
-	
-	--icon:set("dropdownSquareCorners", true)
-	--icon:setDropdown({
-	--	Icon.new()
-	--	:setLabel("Go To Pocket")
-	--	:bindEvent("selected", function(self)
-	--		self:deselect()
-	--		icon:deselect()
-	--		gotoPocket()
-	--	end)
-	--})
 end
 
 AddGhostEvent.OnClientEvent:Connect(function(ghost, pocketName, pocketCounter)
