@@ -14,6 +14,8 @@ local BookmarkEvent = Common.Remotes.Bookmark
 local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
 local FirePortalEvent = Common.Remotes.FirePortal
+local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
+local PocketNameRemoteFunction = Common.Remotes.PocketName
 
 local localPlayer = Players.LocalPlayer
 
@@ -135,18 +137,30 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local Icon = require(game:GetService("ReplicatedStorage").Icon)
 	local Themes =  require(game:GetService("ReplicatedStorage").Icon.Themes)
 	
+	local idValue = workspace:FindFirstChild("PrivateServerKey")
+	if idValue ~= nil then
+		-- We are in a pocket
+		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
+		locationName = "In "..locationName
+	else
+		locationName = "At the root"
+	end
+
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
 	icon:setLabel("Pockets")
 	icon:set("dropdownSquareCorners", true)
 	icon:setDropdown({
 		Icon.new()
-		:setLabel("Goto Pocket")
+		:setLabel(locationName)
+		:bindEvent("selected", function(self)
+			self:deselect()
+		end),
+		Icon.new()
+		:setLabel("Goto Pocket...")
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()
-			--self:deselect()
-			--icon:deselect()
 			gotoPortalGui.Enabled = true
 			wait(0.1)
 			gotoPortalGui.TextBox:CaptureFocus()
@@ -154,7 +168,14 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		:bindEvent("deselected", function(self)
 			gotoPortalGui.Enabled = false
 		end)
-		:bindToggleKey(Config.ShortcutKey)
+		:bindToggleKey(Config.ShortcutKey),
+		Icon.new()
+		:setLabel("Return to Pocket")
+		:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			ReturnToLastPocketEvent:FireServer()
+		end)
 	})
 	icon:setTheme(Themes["BlueGradient"])
 	

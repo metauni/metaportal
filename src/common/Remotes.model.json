@@ -28,6 +28,14 @@
 		{
 			"Name": "PocketPermission",
 			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "PocketName",
+			"ClassName": "RemoteFunction"
+		},
+		{
+			"Name": "ReturnToLastPocket",
+			"ClassName": "RemoteEvent"
 		}
 	]
 }
