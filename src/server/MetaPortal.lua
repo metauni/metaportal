@@ -142,6 +142,11 @@ end
 
 function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode)
 	local screenGui = Common.TeleportScreenGui:Clone()
+	if plr == nil then
+		print("[MetaPortal] Passed nil player to GotoPocket")
+		return
+	end
+	
 	screenGui.Parent = plr.PlayerGui
 
 	local character = plr.Character
@@ -763,6 +768,14 @@ function MetaPortal.PlayerArrive(plr, data)
 	
 	if isPocket() and not MetaPortal.PocketInit then
 		MetaPortal.InitPocket(data)
+	end
+
+	local joinData = plr:GetJoinData()
+	if joinData.TeleportData and joinData.TeleportData.pocket then
+		local teleportData = joinData.TeleportData
+		local pocket = teleportData.pocket
+		
+		MetaPortal.GotoPocketHandler(plr, pocket)
 	end
 end
 
