@@ -140,19 +140,25 @@ function MetaPortal.TeleportFailed(player, teleportResult, errorMessage, placeId
 	player:LoadCharacter()
 end
 
-function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode)
-	local screenGui = Common.TeleportScreenGui:Clone()
-	if plr == nil then
-		print("[MetaPortal] Passed nil player to GotoPocket")
-		return
-	end
+-- passThrough means we are handing a player off to a pocket, and don't
+-- want to make a ghost or show the interstitial GUI
+function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
+	if passThrough == nil then passThrough = false end
+
+	if not passThrough then
+		local screenGui = Common.TeleportScreenGui:Clone()
+		if plr == nil then
+			print("[MetaPortal] Passed nil player to GotoPocket")
+			return
+		end
 	
-	screenGui.Parent = plr.PlayerGui
+		screenGui.Parent = plr.PlayerGui
+	end
 
 	local character = plr.Character
 
 	-- Make a ghost
-	if character ~= nil and character.PrimaryPart ~= nil then
+	if character ~= nil and character.PrimaryPart ~= nil and not passThrough then
 		local cFrame = character.PrimaryPart.CFrame
 		character.Archivable = true
 		local ghost = character:Clone()
@@ -242,7 +248,9 @@ function MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessC
 	end
 end
 
-function MetaPortal.GotoPocketHandler(plr, pocketText)
+function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
+	if passThrough == nil then passThrough = false end
+
 	-- Retrieve the placeId and access code of this pocket
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 	
@@ -307,7 +315,7 @@ function MetaPortal.GotoPocketHandler(plr, pocketText)
 		return
 	end
 	
-	MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode)
+	MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
 end
 
 function MetaPortal.InitPocketPortals()
@@ -464,8 +472,24 @@ function MetaPortal.InitPortal(portal)
 end
 
 function MetaPortal.FirePortal(portal, plr)
-	local placeId = portal.PlaceId.Value
+	if portal == nil or plr == nil then
+		print("[MetaPortal] FirePortal passed nil inputs")
+		return
+	end
+
 	local teleportPart = portal.PrimaryPart
+	if teleportPart == nil then
+		print("[MetaPortal] Portal has nil PrimaryPart")
+		return
+	end
+
+	-- If the portal specifies a pocket name, hand it off
+	if portal:FindFirstChild("PocketName") then
+		MetaPortal.GotoPocketHandler(plr,portal.PocketName.Value)
+		return
+	end
+
+	local placeId = portal.PlaceId.Value
 	local returnPortal = portal:FindFirstChild("Return") and portal.Return.Value
 	local playerTeleportData = MetaPortal.TeleportData[plr.UserId]
 	
@@ -775,7 +799,8 @@ function MetaPortal.PlayerArrive(plr, data)
 		local teleportData = joinData.TeleportData
 		local pocket = teleportData.pocket
 		
-		MetaPortal.GotoPocketHandler(plr, pocket)
+		local passThrough = true
+		MetaPortal.GotoPocketHandler(plr, pocket, passThrough)
 	end
 end
 
