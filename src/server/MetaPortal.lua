@@ -1,6 +1,3 @@
--- Portals have a PlaceId and teleport you there
-
--- Pocket Portals do not begin with a PlaceId, but they are identified by their PersistId
 -- When you step into a pocket portal for the first time, it creates a pocket (identified
 -- uniquely by a PlaceId together with an integer, the PocketCounter) using TeleportService
 -- ReserveServer. We have to remember the access code for the pocket, and this is stored
@@ -12,15 +9,18 @@
 
 -- https://developer.roblox.com/en-us/articles/Teleporting-Between-Places
 
+-- Services
 local CollectionService = game:GetService("CollectionService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local HTTPService = game:GetService("HttpService")
 local DataStoreService = game:GetService("DataStoreService")
 
+-- Requires
 local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
 local Config = require(Common.Config)
 
+-- Remote Events
 local ArriveRemoteEvent = Common.Remotes.Arrive
 local PocketPermissionRemoteEvent = Common.Remotes.PocketPermission
 local GotoEvent = Common.Remotes.Goto
@@ -29,8 +29,8 @@ local CreatePocketEvent = Common.Remotes.CreatePocket
 local FirePortalEvent = Common.Remotes.FirePortal
 local PocketNameRemoteFunction = Common.Remotes.PocketName
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
+local LinkPocketEvent = Common.Remotes.LinkPocket
 
--- Add ghosts folder
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
 if ghosts == nil then
@@ -88,6 +88,7 @@ function MetaPortal.Init()
 	
 	TeleportService.TeleportInitFailed:Connect(MetaPortal.TeleportFailed)
 	CreatePocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocket)
+	LinkPocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocketLink)
 	PocketNameRemoteFunction.OnServerInvoke = MetaPortal.PocketName
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
 
@@ -217,7 +218,13 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 
 	teleportOptions.ReservedServerAccessCode = accessCode
 	teleportOptions:SetTeleportData(teleportData)
-	TeleportService:TeleportAsync(placeId, {plr}, teleportOptions)
+
+	local success, errormessage = pcall(function()
+		return TeleportService:TeleportAsync(placeId, {plr}, teleportOptions)
+	end)
+	if not success then
+		print("[MetaPortal] TeleportAsync failed: ".. errormessage)
+	end
 end
 
 function MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessCode)
@@ -248,27 +255,24 @@ function MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessC
 	end
 end
 
-function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
-	if passThrough == nil then passThrough = false end
-
-	-- Retrieve the placeId and access code of this pocket
+function MetaPortal.PocketDataFromPocketName(pocketText)
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 	
 	if pocketText == nil or string.len(pocketText) == 0 then
-		print("[MetaPortal] User supplied bad input")
-		return
+		print("[MetaPortal] Bad pocket name")
+		return nil
 	end
 	
 	local strParts = pocketText:split(" ")
 	if #strParts <= 1 then
-		print("[MetaPortal] Badly formed pocket address")
-		return
+		print("[MetaPortal] Badly formed pocket name")
+		return nil
 	end
 	
 	local pocketCounter = tonumber(strParts[#strParts])
 	if pocketCounter == nil then
 		print("[MetaPortal] Extraction of pocket counter failed")
-		return
+		return nil
 	end
 	
 	table.remove(strParts, #strParts)
@@ -284,7 +288,7 @@ function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
 	local placeId = Config.PlaceIdOfPockets[pocketName]
 	if placeId == nil then
 		print("[MetaPortal] User specified bad pocket name")
-		return
+		return nil
 	end
 	
 	local pocketKey = MetaPortal.KeyForPocket(placeId, pocketCounter)
@@ -300,22 +304,36 @@ function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
 	
 	if not pocketJSON then
 		print("[MetaPortal] This pocket does not exist yet")
-		return
+		return nil
 	end
 		
 	local pocketData = HTTPService:JSONDecode(pocketJSON)
 	if pocketData == nil then
 		print("[MetaPortal] Failed to decode pocketData")
-		return
+		return nil
 	end
+
+	return placeId, pocketData
+end
+
+function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
+	if passThrough == nil then passThrough = false end
+	local placeId, pocketData = MetaPortal.PocketDataFromPocketName(pocketText)
+	if placeId == nil or pocketData == nil then return end
 	
-	local accessCode = pocketData.AccessCode
-	if accessCode == nil then
+	if pocketData.AccessCode == nil or pocketData.PocketCounter == nil then
 		print("[MetaPortal] Failed to read access code for pocket")
 		return
 	end
 	
-	MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
+	if isPocket() then
+		if placeId == game.PlaceId and pocketData.PocketCounter == MetaPortal.PocketData.PocketCounter then
+			print("[MetaPortal] Attempted to goto current pocket, exiting")
+			return
+		end
+	end
+
+	MetaPortal.GotoPocket(plr, placeId, pocketData.PocketCounter, pocketData.AccessCode, passThrough)
 end
 
 function MetaPortal.InitPocketPortals()
@@ -332,11 +350,11 @@ function MetaPortal.KeyForPocket(placeId, pocketCounter)
 	return "metapocket/pocket/"..placeId.."-"..pocketCounter
 end
 
+-- Attempt to recover the identity of this pocket from the DataStore
+-- Recall that the identity of a pocket is determined by its PlaceId
+-- and by the integer PocketCounter, but we only have access to the
+-- latter from the person who created the pocket as they join it
 function MetaPortal.InitPocket(data)
-	-- Attempt to recover the identity of this pocket from the DataStore
-	-- Recall that the identity of a pocket is determined by its PlaceId
-	-- and by the integer PocketCounter, but we only have access to the
-	-- latter from the person who created the pocket as they join it
 	if data == nil then
 		print("[MetaPortal] Attempted to initialise pocket with nil data")
 		return
@@ -556,19 +574,57 @@ function MetaPortal.FirePortal(portal, plr)
 	
 	teleportOptions:SetTeleportData(teleportData)
 	
-	TeleportService:TeleportAsync(placeId, {plr}, teleportOptions)
+	local success, errormessage = pcall(function()
+		return TeleportService:TeleportAsync(placeId, {plr}, teleportOptions)
+	end)
+	if not success then
+		print("[MetaPortal] TeleportAsync failed: ".. errormessage)
+	end
 end
 
 function MetaPortal.HasPocketPermission(plr)
 	return MetaPortal.PocketPermission[plr.UserId]	
 end
 
--- pocketChosen is one of
--- "alpha"
--- "beta"
--- "gamma"
--- "delta"
--- "songspires" 
+function MetaPortal.CreatePocketLink(plr, portal, pocketText)
+	if portal == nil then
+		print("[MetaPortal] Passed bad portal")
+		return
+	end
+
+	if pocketText == nil or pocketText == "" then
+		print("[MetaPortal] Passed bad pocketText to CreatePocketLink")
+		return
+	end
+
+	local placeId, pocketData = MetaPortal.PocketDataFromPocketName(pocketText)
+	if placeId == nil or pocketData == nil then
+		print("[MetaPortal] Failed to find pocket data")
+		return
+	end
+
+	if isPocket() then
+		if placeId == game.PlaceId and pocketData.PocketCounter == MetaPortal.PocketData.PocketCounter then
+			print("[MetaPortal] Attempted to link to current pocket, exiting")
+			return
+		end
+	end
+
+	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
+	local portalKey = MetaPortal.KeyForPortal(portal)
+	local pocketJSON = HTTPService:JSONEncode(pocketData)
+	DataStore:SetAsync(portalKey,pocketJSON)
+
+	pocketData.PlaceId = placeId
+	pocketData.PocketName = Players:GetNameFromUserIdAsync(pocketData.CreatorId)
+
+	MetaPortal.AttachValuesToPocketPortal(portal, pocketData)
+	local connection = MetaPortal.PocketInitTouchConnections[portal]
+	if connection ~= nil then
+		connection:Disconnect()
+	end
+end
+
 function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 	if portal == nil then
 		print("[MetaPortal] CreatePocket passed a nil portal")
@@ -642,7 +698,7 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 	creator.Parent = portal
 
 	local label = portal:FindFirstChild("Label")
-	if label then
+	if label and data.PocketName ~= nil then
 		local gui = label:FindFirstChild("SurfaceGui")
 		if gui then
 			local text = gui:FindFirstChild("TextLabel")

@@ -36,6 +36,10 @@
 		{
 			"Name": "ReturnToLastPocket",
 			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "LinkPocket",
+			"ClassName": "RemoteEvent"
 		}
 	]
 }

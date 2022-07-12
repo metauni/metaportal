@@ -4,6 +4,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
+local VRService = game:GetService("VRService")
 
 local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
 local Config = require(Common.Config)
@@ -27,14 +28,22 @@ local teleportScreenGui = Common.TeleportScreenGui:Clone()
 
 local function InitPortal(portal)
 	local teleportPart = portal.PrimaryPart
-		
+	
 	local db = false -- debounce
 	local function onTeleportTouch(otherPart)
 		if not otherPart then return end
 		if not otherPart.Parent then return end
-		
+
 		local humanoid = otherPart.Parent:FindFirstChildWhichIsA("Humanoid")
 		if humanoid then
+			if VRService.VREnabled then
+				if otherPart.Name == "MetaChalk" or
+						otherPart.Name == "RightHand" or
+						otherPart.Name == "LeftHand" then
+					return
+				end
+			end
+
 			if not db then
 				db = true
 				local plr = Players:GetPlayerFromCharacter(otherPart.Parent)

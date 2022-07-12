@@ -3,7 +3,7 @@ local Config = {
 	PocketTag = "metapocket",
 	PocketDataStoreTag = "metapocket",
 	DataStoreTag = "metaportal",
-	Version = "v0.2.6",
+	Version = "v0.3.0",
 	PocketQuota = 1,
 	ShortcutKey = Enum.KeyCode.K,
 	PlaceIdOfPockets = {
@@ -13,7 +13,14 @@ local Config = {
 		["Gamma Events"] = 9240578087,
 		["Songspires"] = 9440651873,
 		["Gemini Pulsar"] = 9795154224,
-		["Symbolic Wilds"] = 10088371393}
+		["Symbolic Wilds"] = 10088371393},
+	AvailablePockets = {
+		"Alpha Cove",
+		"Delta Plains",
+		"Gamma Events",
+		"Songspires",
+		"Symbolic Wilds"
+	}
 }
 
 return Config
