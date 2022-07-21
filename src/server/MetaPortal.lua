@@ -609,14 +609,14 @@ function MetaPortal.CreatePocketLink(plr, portal, pocketText)
 			return
 		end
 	end
+	
+	pocketData.PlaceId = placeId
+	pocketData.PocketName = Players:GetNameFromUserIdAsync(pocketData.CreatorId)
 
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 	local portalKey = MetaPortal.KeyForPortal(portal)
 	local pocketJSON = HTTPService:JSONEncode(pocketData)
 	DataStore:SetAsync(portalKey,pocketJSON)
-
-	pocketData.PlaceId = placeId
-	pocketData.PocketName = Players:GetNameFromUserIdAsync(pocketData.CreatorId)
 
 	MetaPortal.AttachValuesToPocketPortal(portal, pocketData)
 	local connection = MetaPortal.PocketInitTouchConnections[portal]
