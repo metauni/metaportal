@@ -3,7 +3,7 @@ local Config = {
 	PocketTag = "metapocket",
 	PocketDataStoreTag = "metapocket",
 	DataStoreTag = "metaportal",
-	Version = "v0.3.0",
+	Version = "v0.3.2",
 	PocketQuota = 1,
 	ShortcutKey = Enum.KeyCode.K,
 	PlaceIdOfPockets = {
@@ -14,12 +14,15 @@ local Config = {
 		["Songspires"] = 9440651873,
 		["Gemini Pulsar"] = 9795154224,
 		["Symbolic Wilds"] = 10088371393,
-		["Moonlight Forest"] = 10302055084},
+		["Moonlight Forest"] = 10302055084,
+		["Risen Sea"] = 10323385373,
+		["Research Agora"] = 10323359931,
+		["Between"] = 10302082510},
 	AvailablePockets = {
-		"Alpha Cove",
+		"Between",
 		"Delta Plains",
 		"Gamma Events",
-		"Songspires",
+		"Risen Sea",
 		"Symbolic Wilds"
 	},
 	PocketBackgrounds = {
@@ -30,6 +33,9 @@ local Config = {
 		["Gemini Pulsar"] = "rbxassetid://9795255250",
 		["Songspires"] = "rbxassetid://9444031149",
 		["Moonlight Forest"] = "rbxassetid://9444031149",
+		["Risen Sea"] = "rbxassetid://10325295394",
+		["Research Agora"] = "rbxassetid://10325295755",
+		["Between"] = "rbxassetid://10325550006",
 		["_PocketLink"] = "rbxassetid://10197036910"
 	}
 	

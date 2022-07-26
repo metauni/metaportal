@@ -10,7 +10,6 @@ local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
 local Config = require(Common.Config)
 
 local ArriveRemoteEvent = Common.Remotes.Arrive
-local PocketPermissionRemoteEvent = Common.Remotes.PocketPermission
 local BookmarkEvent = Common.Remotes.Bookmark
 local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
@@ -28,6 +27,10 @@ local teleportScreenGui = Common.TeleportScreenGui:Clone()
 
 local function InitPortal(portal)
 	local teleportPart = portal.PrimaryPart
+	if teleportPart == nil then
+		print("[MetaPortal] Attempting to init portal with nil PrimaryPart")
+		return
+	end
 	
 	local db = false -- debounce
 	local function onTeleportTouch(otherPart)
@@ -126,18 +129,6 @@ if localCharacter then
 			start.Label.SurfaceGui.TextLabel.Text = labelText
 		end
 	end	
-	
-	local hasPocketPermission = false
-	local adminEvents = game:GetService("ReplicatedStorage"):FindFirstChild("MetaAdmin")
-	if adminEvents then
-		local canWriteRF = adminEvents:WaitForChild("CanWrite")
-
-		if canWriteRF then
-			hasPocketPermission = canWriteRF:InvokeServer()
-		end
-	end
-
-	PocketPermissionRemoteEvent:FireServer(hasPocketPermission)
 end
 
 -- Create the menu items

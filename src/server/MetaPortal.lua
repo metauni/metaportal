@@ -15,6 +15,7 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local HTTPService = game:GetService("HttpService")
 local DataStoreService = game:GetService("DataStoreService")
+local VRService = game:GetService("VRService")
 
 -- Requires
 local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
@@ -22,7 +23,6 @@ local Config = require(Common.Config)
 
 -- Remote Events
 local ArriveRemoteEvent = Common.Remotes.Arrive
-local PocketPermissionRemoteEvent = Common.Remotes.PocketPermission
 local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
 local CreatePocketEvent = Common.Remotes.CreatePocket
@@ -50,7 +50,6 @@ function MetaPortal.Init()
 	MetaPortal.TeleportData = {} -- stores information for each player teleporting in
 	MetaPortal.PocketInit = false
 	MetaPortal.PocketData = nil
-	MetaPortal.PocketPermission = {}
 	MetaPortal.PocketInitTouchConnections = {}
 	
 	-- Find all metaportals
@@ -72,10 +71,6 @@ function MetaPortal.Init()
 	
 	ArriveRemoteEvent.OnServerEvent:Connect(function(plr, data)
 		MetaPortal.PlayerArrive(plr, data)
-	end)
-	
-	PocketPermissionRemoteEvent.OnServerEvent:Connect(function(plr,data)
-		MetaPortal.PocketPermission[plr.UserId] = data
 	end)
 	
 	GotoEvent.OnServerEvent:Connect(function(plr,pocketText)
@@ -146,7 +141,7 @@ end
 function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
 	if passThrough == nil then passThrough = false end
 
-	if not passThrough then
+	if not passThrough and not VRService.VREnabled then
 		local screenGui = Common.TeleportScreenGui:Clone()
 		if plr == nil then
 			print("[MetaPortal] Passed nil player to GotoPocket")
@@ -367,7 +362,7 @@ function MetaPortal.InitPocket(data)
 		return
 	end
 	
-	-- This data is used for interop with metaboard and metaadmin
+	-- This data is used for interop
 	local idValue = workspace:FindFirstChild("PrivateServerKey")
 	if not idValue then
 		idValue = Instance.new("StringValue")
@@ -428,19 +423,13 @@ function MetaPortal.InitPocket(data)
 	MetaPortal.InitPocketPortals()
 end
 
-function MetaPortal.PocketName(player)
+function MetaPortal.PocketName()
 	if MetaPortal.PocketData == nil then
 		print("[MetaPortal] Cannot return name of un-initialised pocket")
 		return
 	end
 
-	local pocketName = nil
-	for key, value in pairs(Config.PlaceIdOfPockets) do
-		if value == game.PlaceId then
-			pocketName = key
-		end
-	end
-
+	local pocketName = MetaPortal.PocketNameFromPlaceId(game.PlaceId)
 	local labelText = ""
 
 	if pocketName ~= nil then
@@ -582,8 +571,10 @@ function MetaPortal.FirePortal(portal, plr)
 	end
 end
 
-function MetaPortal.HasPocketPermission(plr)
-	return MetaPortal.PocketPermission[plr.UserId]	
+function MetaPortal.HasPocketCreatePermission(plr)
+	local perm = plr:GetAttribute("metaadmin_isscribe")
+	if perm == nil then return false end
+	return perm
 end
 
 function MetaPortal.CreatePocketLink(plr, portal, pocketText)
@@ -676,6 +667,17 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 	end
 end
 
+function MetaPortal.PocketNameFromPlaceId(placeId)
+	local pocketName = nil
+	for key, value in pairs(Config.PlaceIdOfPockets) do
+		if value == placeId then
+			pocketName = key
+		end
+	end
+
+	return pocketName
+end
+
 function MetaPortal.AttachValuesToPocketPortal(portal, data)
 	local accessCode = Instance.new("StringValue")
 	accessCode.Name = "AccessCode"
@@ -703,7 +705,13 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 		if gui then
 			local text = gui:FindFirstChild("TextLabel")
 			if text then
-				text.Text = data.PocketName
+				local labelText = ""
+				local pocketName = MetaPortal.PocketNameFromPlaceId(data.PlaceId)
+				if pocketName ~= nil then
+					labelText = labelText .. pocketName
+				end
+				labelText = labelText .. " " .. tostring(data.PocketCounter)
+				text.Text = labelText
 			end
 		end
 	end
@@ -800,7 +808,7 @@ function MetaPortal.InitPocketPortal(portal)
 					local plr = Players:GetPlayerFromCharacter(otherPart.Parent)
 					if plr then	
 						-- Check permissions
-						if not MetaPortal.HasPocketPermission(plr) then
+						if not MetaPortal.HasPocketCreatePermission(plr) then
 							print("[MetaPortal] User is not authorised to make pockets")
 							wait(0.1)
 							db = false
