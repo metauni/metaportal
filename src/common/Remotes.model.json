@@ -38,6 +38,10 @@
 			"ClassName": "RemoteEvent"
 		},
 		{
+			"Name": "UnlinkPortal",
+			"ClassName": "RemoteEvent"
+		},
+		{
 			"Name": "IsPocket",
 			"ClassName": "RemoteFunction"
 		}

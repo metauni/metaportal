@@ -17,6 +17,7 @@ local FirePortalEvent = Common.Remotes.FirePortal
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local PocketNameRemoteFunction = Common.Remotes.PocketName
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
+local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 
 local localPlayer = Players.LocalPlayer
 
@@ -25,6 +26,8 @@ local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait(
 local gotoPortalGui = localPlayer.PlayerGui:WaitForChild("GotoPortalGui")
 local newPocketGui = localPlayer.PlayerGui:WaitForChild("NewPocketGui")	
 local teleportScreenGui = Common.TeleportScreenGui:Clone()
+
+local portalTouchedConnections = {}
 
 local function InitPortal(portal)
 	local teleportPart = portal.PrimaryPart
@@ -73,7 +76,8 @@ local function InitPortal(portal)
 			end
 		end
 	end
-	teleportPart.Touched:Connect(onTeleportTouch)
+	local connection = teleportPart.Touched:Connect(onTeleportTouch)
+	portalTouchedConnections[portal] = connection
 end
 
 local portals = CollectionService:GetTagged(Config.PortalTag)
@@ -84,6 +88,13 @@ end
 
 CollectionService:GetInstanceAddedSignal(Config.PortalTag):Connect(function(portal)
 	InitPortal(portal)
+end)
+
+CollectionService:GetInstanceRemovedSignal(Config.PortalTag):Connect(function(portal)
+	if portalTouchedConnections[portal] ~= nil then
+		portalTouchedConnections[portal]:Disconnect()
+		portalTouchedConnections[portal] = nil
+	end
 end)
 
 if localCharacter then
@@ -132,7 +143,29 @@ if localCharacter then
 	end	
 end
 
-local function StartUnlinkPocketPortalMode()
+local function EndUnlinkPortalMode()
+	local portals = CollectionService:GetTagged(Config.PortalTag)
+
+	for _, portal in ipairs(portals) do
+		if portal:FindFirstChild("CreatorId") == nil then continue end
+
+		if portal.CreatorId.Value ~= localPlayer.UserId then
+			continue
+		end
+
+		local c = portal:FindFirstChild("ClickTargetClone")
+		if c ~= nil then
+			c:Destroy()
+		end
+	end
+
+	local screenGui = localPlayer.PlayerGui:FindFirstChild("UnlinkPortalGui")
+	if screenGui ~= nil then
+		screenGui:Destroy()
+	end
+end
+
+local function StartUnlinkPortalMode()
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "UnlinkPortalGui"
 
@@ -146,6 +179,7 @@ local function StartUnlinkPocketPortalMode()
 	cancelButton.TextSize = 30
 	cancelButton.Text = "Cancel"
 	cancelButton.Activated:Connect(function()
+		EndUnlinkPortalMode()
 		screenGui:Destroy()
 	end)
 	Instance.new("UICorner").Parent = cancelButton
@@ -166,6 +200,12 @@ local function StartUnlinkPocketPortalMode()
 	local portals = CollectionService:GetTagged(Config.PortalTag)
 
 	for _, portal in ipairs(portals) do
+		if portal:FindFirstChild("CreatorId") == nil then continue end
+
+		if portal.CreatorId.Value ~= localPlayer.UserId then
+			continue
+		end
+
 		local teleportPart = portal.PrimaryPart
 		local clickClone = teleportPart:Clone()
 		for _, t in ipairs(CollectionService:GetTags(clickClone)) do
@@ -174,7 +214,7 @@ local function StartUnlinkPocketPortalMode()
 		clickClone:ClearAllChildren()
 		clickClone.Name = "ClickTargetClone"
 		clickClone.Transparency = 0
-		clickClone.Size = teleportPart.Size * 1.05
+		clickClone.Size = teleportPart.Size * 1.01
 		clickClone.Material = Enum.Material.SmoothPlastic
 		clickClone.CanCollide = false
 		clickClone.Parent = portal
@@ -184,14 +224,8 @@ local function StartUnlinkPocketPortalMode()
 		local clickDetector = Instance.new("ClickDetector")
 		clickDetector.Parent = clickClone
 		clickDetector.MouseClick:Connect(function()
-			print("Clicked")
-			for _, portal in ipairs(portals) do
-				local c = portal:FindFirstChild("ClickTargetClone")
-				if c ~= nil then
-					c:Destroy()
-				end
-			end
-			screenGui:Destroy()
+			UnlinkPortalRemoteEvent:FireServer(portal)
+			EndUnlinkPortalMode()
 		end)
 	end
 end
@@ -245,7 +279,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()
-			StartUnlinkPocketPortalMode()
+			StartUnlinkPortalMode()
 		end)
 	})
 	icon:setTheme(Themes["BlueGradient"])

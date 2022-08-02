@@ -31,6 +31,7 @@ local PocketNameRemoteFunction = Common.Remotes.PocketName
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local LinkPocketEvent = Common.Remotes.LinkPocket
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
+local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
@@ -88,6 +89,7 @@ function MetaPortal.Init()
 	PocketNameRemoteFunction.OnServerInvoke = MetaPortal.PocketName
 	IsPocketRemoteFunction.OnServerInvoke = isPocket
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
+	UnlinkPortalRemoteEvent.OnServerEvent:Connect(MetaPortal.UnlinkPortal)
 
 	print("[MetaPortal] "..Config.Version.." initialised")
 end
@@ -462,6 +464,7 @@ function MetaPortal.InitPortal(portal)
 	teleportPart.Anchored = true
 	teleportPart.Color  = Color3.fromRGB(163, 162, 165)
 	
+	if teleportPart:FindFirstChild("Sound") then teleportPart.Sound:Destroy() end
 	local sound = Instance.new("Sound")
 	sound.Name = "Sound"
 	sound.Playing = false
@@ -472,6 +475,7 @@ function MetaPortal.InitPortal(portal)
 	sound.Volume = 0.3
 	sound.Parent = teleportPart
 	
+	if teleportPart:FindFirstChild("Fire") then teleportPart.Fire:Destroy() end
 	local fire = Instance.new("Fire")
 	fire.Color = Color3.fromRGB(236, 139, 70)
 	fire.Enabled = true
@@ -685,21 +689,25 @@ function MetaPortal.PocketNameFromPlaceId(placeId)
 end
 
 function MetaPortal.AttachValuesToPocketPortal(portal, data)
+	if portal:FindFirstChild("AccessCode") then portal.AccessCode:Destroy() end
 	local accessCode = Instance.new("StringValue")
 	accessCode.Name = "AccessCode"
 	accessCode.Value = data.AccessCode
 	accessCode.Parent = portal
 
+	if portal:FindFirstChild("PlaceId") then portal.PlaceId:Destroy() end
 	local place = Instance.new("IntValue")
 	place.Name = "PlaceId"
 	place.Value = data.PlaceId
 	place.Parent = portal
 
+	if portal:FindFirstChild("PocketCounter") then portal.PocketCounter:Destroy() end
 	local counter = Instance.new("IntValue")
 	counter.Name = "PocketCounter"
 	counter.Value = data.PocketCounter
 	counter.Parent = portal
 
+	if portal:FindFirstChild("CreatorId") then portal.CreatorId:Destroy() end
 	local creator = Instance.new("IntValue")
 	creator.Name = "CreatorId"
 	creator.Value = data.CreatorId
@@ -707,21 +715,18 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 
 	local label = portal:FindFirstChild("Label")
 	if label and data.PocketName ~= nil then
-		local gui = label:FindFirstChild("SurfaceGui")
-		if gui then
-			local text = gui:FindFirstChild("TextLabel")
-			if text then
-				local labelText = ""
-				local pocketName = MetaPortal.PocketNameFromPlaceId(data.PlaceId)
-				if pocketName ~= nil then
-					labelText = labelText .. pocketName
-				end
-				labelText = labelText .. " " .. tostring(data.PocketCounter)
-				text.Text = labelText
-			end
+		local gui = label.SurfaceGui
+		local text = gui.TextLabel	
+		local labelText = ""
+		local pocketName = MetaPortal.PocketNameFromPlaceId(data.PlaceId)
+		if pocketName ~= nil then
+			labelText = labelText .. pocketName
 		end
+		labelText = labelText .. " " .. tostring(data.PocketCounter)
+		text.Text = labelText
 	end
 
+	if portal:FindFirstChild("SurfaceLight") then portal.SurfaceLight:Destroy() end
 	local slight = Instance.new("SurfaceLight")
 	slight.Name = "SurfaceLight"
 	slight.Range = 9
@@ -759,6 +764,60 @@ function MetaPortal.KeyForPortal(portal)
 	end
 	
 	return portalKey
+end
+
+function MetaPortal.ConnectBlankPocketPortalTouched(portal)
+	local teleportPart = portal.PrimaryPart
+
+	local connection
+		
+	local db = false -- debounce
+	local function onPortalTouch(otherPart)
+		if not otherPart then return end
+		if not otherPart.Parent then return end
+
+		local humanoid = otherPart.Parent:FindFirstChildWhichIsA("Humanoid")
+		if humanoid then
+			if not db then
+				db = true
+				local plr = Players:GetPlayerFromCharacter(otherPart.Parent)
+				if plr then	
+					-- Check permissions
+					if not MetaPortal.HasPocketCreatePermission(plr) then
+						print("[MetaPortal] User is not authorised to make pockets")
+						wait(0.1)
+						db = false
+						return
+					end
+					
+					-- Check to see if this player has exceeded their quota of pockets
+					local pockets = CollectionService:GetTagged(Config.PocketTag)
+					
+					local count = 0
+					for _, pocket in ipairs(pockets) do
+						local creator = pocket:FindFirstChild("CreatorId")
+						if creator and creator.Value == plr.UserId then
+							count += 1
+						end
+					end
+					
+					-- In a pocket the creator can make as many sub-pockets as they wish
+					if count >= Config.PocketQuota and not (isPocket() and MetaPortal.PocketData.CreatorId == plr.UserId) then
+						print("[MetaPortal] User has reached the pocket quota")
+						wait(0.1)
+						db = false
+						return
+					end
+					
+					CreatePocketEvent:FireClient(plr, portal)
+				end
+				wait(0.1)
+				db = false
+			end
+		end
+	end
+	connection = teleportPart.Touched:Connect(onPortalTouch)
+	MetaPortal.PocketInitTouchConnections[portal] = connection
 end
 
 function MetaPortal.InitPocketPortal(portal)
@@ -799,57 +858,53 @@ function MetaPortal.InitPocketPortal(portal)
 		local pocketData = HTTPService:JSONDecode(pocketJSON)
 		MetaPortal.AttachValuesToPocketPortal(portal, pocketData)
 	else
-		-- This hasn't been opened yet, so create a touch event to open it
-		local connection
-		
-		local db = false -- debounce
-		local function onPortalTouch(otherPart)
-			if not otherPart then return end
-			if not otherPart.Parent then return end
-
-			local humanoid = otherPart.Parent:FindFirstChildWhichIsA("Humanoid")
-			if humanoid then
-				if not db then
-					db = true
-					local plr = Players:GetPlayerFromCharacter(otherPart.Parent)
-					if plr then	
-						-- Check permissions
-						if not MetaPortal.HasPocketCreatePermission(plr) then
-							print("[MetaPortal] User is not authorised to make pockets")
-							wait(0.1)
-							db = false
-							return
-						end
-						
-						-- Check to see if this player has exceeded their quota of pockets
-						local pockets = CollectionService:GetTagged(Config.PocketTag)
-						
-						local count = 0
-						for _, pocket in ipairs(pockets) do
-							local creator = pocket:FindFirstChild("CreatorId")
-							if creator and creator.Value == plr.UserId then
-								count += 1
-							end
-						end
-						
-						-- In a pocket the creator can make as many sub-pockets as they wish
-						if count >= Config.PocketQuota and not (isPocket() and MetaPortal.PocketData.CreatorId == plr.UserId) then
-							print("[MetaPortal] User has reached the pocket quota")
-							wait(0.1)
-							db = false
-							return
-						end
-						
-						CreatePocketEvent:FireClient(plr, portal)
-					end
-					wait(0.1)
-					db = false
-				end
-			end
-		end
-		connection = teleportPart.Touched:Connect(onPortalTouch)
-		MetaPortal.PocketInitTouchConnections[portal] = connection
+		MetaPortal.ConnectBlankPocketPortalTouched(portal)
 	end
+end
+
+function MetaPortal.UnlinkPortal(plr, portal)
+	if portal == nil then
+		print("[MetaPortal] Attempted to unlink nil portal")
+		return
+	end
+
+	if portal:FindFirstChild("CreatorId") == nil or portal.CreatorId.Value == nil then
+		print("[MetaPortal] Attempt to unlink malformed portal")
+		return
+	end
+
+	if plr.UserId ~= portal.CreatorId.Value then
+		print("[MetaPortal] Player attempted to unlink portal they did not create")
+		return
+	end
+
+	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
+
+	-- Erase the contents stored for this portal
+	local portalKey = MetaPortal.KeyForPortal(portal)
+	local success, errormessage = pcall(function()
+		return DataStore:RemoveAsync(portalKey)
+	end)
+	if not success then
+		print("[MetaPortal] SetAsync fail for " .. portalKey .. " with ".. errormessage)
+		return
+	end
+
+	local teleportPart = portal.PrimaryPart
+	teleportPart.Material = Enum.Material.Glass
+	teleportPart.Fire:Destroy()
+
+	local label = portal:FindFirstChild("Label")
+	if label then
+		local gui = label.SurfaceGui
+		local text = gui.TextLabel	
+		text.Text = ""
+	end
+
+	portal.IsOpen.Value = false
+	CollectionService:RemoveTag(portal, "metaportal")
+
+	MetaPortal.ConnectBlankPocketPortalTouched(portal)
 end
 
 function MetaPortal.PlayerArrive(plr, data)
