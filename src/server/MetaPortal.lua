@@ -744,7 +744,7 @@ function MetaPortal.KeyForPortal(portal)
 		-- We are in a pocket
 		-- and so the key to look up this pocket portal also needs
 		-- to involve the unique identifier of the pocket
-		local idValue = workspace:FindFirstChild("Pocketid")
+		local idValue = workspace:FindFirstChild("PocketId")
 		if not idValue then
 			print("[MetaPortal] Failed to initialise pocket portal")
 			return
