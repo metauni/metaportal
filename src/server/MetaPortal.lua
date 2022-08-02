@@ -30,6 +30,7 @@ local FirePortalEvent = Common.Remotes.FirePortal
 local PocketNameRemoteFunction = Common.Remotes.PocketName
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local LinkPocketEvent = Common.Remotes.LinkPocket
+local IsPocketRemoteFunction = Common.Remotes.IsPocket
 
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
@@ -39,7 +40,7 @@ if ghosts == nil then
 	ghosts.Parent = game.Workspace
 end
 
-local function isPocket()
+function isPocket()
 	return (game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0)
 end
 
@@ -85,6 +86,7 @@ function MetaPortal.Init()
 	CreatePocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocket)
 	LinkPocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocketLink)
 	PocketNameRemoteFunction.OnServerInvoke = MetaPortal.PocketName
+	IsPocketRemoteFunction.OnServerInvoke = isPocket
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
 
 	print("[MetaPortal] "..Config.Version.." initialised")

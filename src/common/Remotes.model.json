@@ -36,6 +36,10 @@
 		{
 			"Name": "LinkPocket",
 			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "IsPocket",
+			"ClassName": "RemoteFunction"
 		}
 	]
 }

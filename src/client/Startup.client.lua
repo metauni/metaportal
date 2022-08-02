@@ -16,6 +16,7 @@ local AddGhostEvent = Common.Remotes.AddGhost
 local FirePortalEvent = Common.Remotes.FirePortal
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local PocketNameRemoteFunction = Common.Remotes.PocketName
+local IsPocketRemoteFunction = Common.Remotes.IsPocket
 
 local localPlayer = Players.LocalPlayer
 
@@ -201,7 +202,12 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local Icon = require(game:GetService("ReplicatedStorage").Icon)
 	local Themes =  require(game:GetService("ReplicatedStorage").Icon.Themes)
 	
-	local locationName = PocketNameRemoteFunction:InvokeServer() or "At the root"
+	local locationName = "At the root"
+	local isPocket = IsPocketRemoteFunction:InvokeServer()
+	if isPocket then
+		game.Workspace:WaitForChild("PocketId") -- wait for the server to finish loading
+		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
+	end
 
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
