@@ -26,10 +26,6 @@
 			"ClassName": "RemoteEvent"
 		},
 		{
-			"Name": "PocketPermission",
-			"ClassName": "RemoteEvent"
-		},
-		{
 			"Name": "PocketName",
 			"ClassName": "RemoteFunction"
 		},

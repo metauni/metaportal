@@ -131,25 +131,83 @@ if localCharacter then
 	end	
 end
 
+local function StartUnlinkPocketPortalMode()
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "UnlinkPortalGui"
+
+	local cancelButton = Instance.new("TextButton")
+	cancelButton.Name = "CancelButton"
+	cancelButton.BackgroundColor3 = Color3.fromRGB(148,148,148)
+	cancelButton.Size = UDim2.new(0,200,0,50)
+	cancelButton.Position = UDim2.new(0.5,-100,0.9,-50)
+	cancelButton.Parent = screenGui
+	cancelButton.TextColor3 = Color3.new(1,1,1)
+	cancelButton.TextSize = 30
+	cancelButton.Text = "Cancel"
+	cancelButton.Activated:Connect(function()
+		screenGui:Destroy()
+	end)
+	Instance.new("UICorner").Parent = cancelButton
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = "TextLabel"
+	textLabel.BackgroundColor3 = Color3.new(0,0,0)
+	textLabel.BackgroundTransparency = 0.9
+	textLabel.Size = UDim2.new(0,500,0,50)
+	textLabel.Position = UDim2.new(0.5,-250,0,100)
+	textLabel.TextColor3 = Color3.new(1,1,1)
+	textLabel.TextSize = 25
+	textLabel.Text = "Select a pocket portal to unlink"
+	textLabel.Parent = screenGui
+
+	screenGui.Parent = localPlayer.PlayerGui
+
+	local portals = CollectionService:GetTagged(Config.PortalTag)
+
+	for _, portal in ipairs(portals) do
+		local teleportPart = portal.PrimaryPart
+		local clickClone = teleportPart:Clone()
+		for _, t in ipairs(CollectionService:GetTags(clickClone)) do
+			CollectionService:RemoveTag(clickClone, t)
+		end
+		clickClone:ClearAllChildren()
+		clickClone.Name = "ClickTargetClone"
+		clickClone.Transparency = 0
+		clickClone.Size = teleportPart.Size * 1.05
+		clickClone.Material = Enum.Material.SmoothPlastic
+		clickClone.CanCollide = false
+		clickClone.Parent = portal
+		clickClone.Color = Color3.new(1,0,0)
+		clickClone.CFrame = teleportPart.CFrame + teleportPart.CFrame.LookVector * 1
+
+		local clickDetector = Instance.new("ClickDetector")
+		clickDetector.Parent = clickClone
+		clickDetector.MouseClick:Connect(function()
+			print("Clicked")
+			for _, portal in ipairs(portals) do
+				local c = portal:FindFirstChild("ClickTargetClone")
+				if c ~= nil then
+					c:Destroy()
+				end
+			end
+			screenGui:Destroy()
+		end)
+	end
+end
+
 -- Create the menu items
 -- icon is https://fonts.google.com/icons?icon.query=door
 if ReplicatedStorage:FindFirstChild("Icon") then
 	local Icon = require(game:GetService("ReplicatedStorage").Icon)
 	local Themes =  require(game:GetService("ReplicatedStorage").Icon.Themes)
 	
-	local idValue = workspace:FindFirstChild("PrivateServerKey")
-	if idValue ~= nil then
-		-- We are in a pocket
-		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
-		locationName = "In "..locationName
-	else
-		locationName = "At the root"
-	end
+	local locationName = PocketNameRemoteFunction:InvokeServer() or "At the root"
 
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
 	icon:setLabel("Pockets")
 	icon:set("dropdownSquareCorners", true)
+	icon:set("dropdownMaxIconsBeforeScroll", 10)
 	icon:setDropdown({
 		Icon.new()
 		:setLabel(locationName)
@@ -175,6 +233,13 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			self:deselect()
 			icon:deselect()
 			ReturnToLastPocketEvent:FireServer()
+		end),
+		Icon.new()
+		:setLabel("Unlink portal...")
+		:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			StartUnlinkPocketPortalMode()
 		end)
 	})
 	icon:setTheme(Themes["BlueGradient"])

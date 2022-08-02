@@ -363,13 +363,13 @@ function MetaPortal.InitPocket(data)
 	end
 	
 	-- This data is used for interop
-	local idValue = workspace:FindFirstChild("PrivateServerKey")
+	local idValue = workspace:FindFirstChild("PocketId")
 	if not idValue then
 		idValue = Instance.new("StringValue")
-		idValue.Name = "PrivateServerKey"
+		idValue.Name = "PocketId"
 		idValue.Value = game.PlaceId .. "-" .. data.PocketCounter
 		idValue.Parent = workspace
-		print("[MetaPortal] PrivateServerKey " .. idValue.Value)
+		print("[MetaPortal] PocketId " .. idValue.Value)
 	end
 		
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
@@ -424,6 +424,10 @@ function MetaPortal.InitPocket(data)
 end
 
 function MetaPortal.PocketName()
+	if not isPocket() then
+		return nil
+	end
+	
 	if MetaPortal.PocketData == nil then
 		print("[MetaPortal] Cannot return name of un-initialised pocket")
 		return
@@ -740,7 +744,7 @@ function MetaPortal.KeyForPortal(portal)
 		-- We are in a pocket
 		-- and so the key to look up this pocket portal also needs
 		-- to involve the unique identifier of the pocket
-		local idValue = workspace:FindFirstChild("PrivateServerKey")
+		local idValue = workspace:FindFirstChild("Pocketid")
 		if not idValue then
 			print("[MetaPortal] Failed to initialise pocket portal")
 			return
