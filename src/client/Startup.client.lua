@@ -117,9 +117,7 @@ if localCharacter then
 				end
 			end
 		end
-		
-		ArriveRemoteEvent:FireServer(teleportData)
-		
+	
 		local start = game.Workspace:FindFirstChild("Start")
 		
 		if start and start:FindFirstChild("Label") then
@@ -140,7 +138,9 @@ if localCharacter then
 
 			start.Label.SurfaceGui.TextLabel.Text = labelText
 		end
-	end	
+	end
+
+	ArriveRemoteEvent:FireServer()
 end
 
 local function EndUnlinkPortalMode()

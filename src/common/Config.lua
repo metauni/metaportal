@@ -3,7 +3,7 @@ local Config = {
 	PocketTag = "metapocket",
 	PocketDataStoreTag = "metapocket",
 	DataStoreTag = "metaportal",
-	Version = "v0.3.4",
+	Version = "v0.4.0",
 	PocketQuota = 1,
 	ShortcutKey = Enum.KeyCode.K,
 	PlaceIdOfPockets = {
@@ -22,7 +22,6 @@ local Config = {
 		"Between",
 		"Delta Plains",
 		"Gamma Events",
-		"Risen Sea",
 		"Symbolic Wilds"
 	},
 	PocketBackgrounds = {

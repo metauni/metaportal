@@ -44,6 +44,10 @@
 		{
 			"Name": "IsPocket",
 			"ClassName": "RemoteFunction"
+		},
+		{
+			"Name": "PocketsForPlayer",
+			"ClassName": "RemoteFunction"
 		}
 	]
 }
