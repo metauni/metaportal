@@ -198,11 +198,12 @@ local function StartUnlinkPortalMode()
 	screenGui.Parent = localPlayer.PlayerGui
 
 	local portals = CollectionService:GetTagged(Config.PortalTag)
+	local isPocket = IsPocketRemoteFunction:InvokeServer()
 
 	for _, portal in ipairs(portals) do
 		if portal:FindFirstChild("CreatorId") == nil then continue end
 
-		if portal.CreatorId.Value ~= localPlayer.UserId then
+		if localPlayer.UserId ~= portal.CreatorId.Value then
 			continue
 		end
 
@@ -240,6 +241,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local isPocket = IsPocketRemoteFunction:InvokeServer()
 	if isPocket then
 		game.Workspace:WaitForChild("PocketId") -- wait for the server to finish loading
+		wait(1)
 		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
 	end
 
@@ -275,7 +277,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			ReturnToLastPocketEvent:FireServer()
 		end),
 		Icon.new()
-		:setLabel("Unlink portal...")
+		:setLabel("Unlink Portal...")
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()

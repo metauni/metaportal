@@ -220,6 +220,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 			if desc:IsA("BasePart") then
 				desc.Transparency = 1 - (0.2 * (1 - desc.Transparency))
 				desc.CastShadow = false
+				desc.Anchored = true
 			end
 		end
 
@@ -670,6 +671,31 @@ function MetaPortal.CreatePocketLink(plr, portal, pocketText)
 	end
 end
 
+function MetaPortal.AddPocketToListForPlayer(plr, pocketData)
+	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
+
+	local playerKey = MetaPortal.KeyForUser(plr)
+	local success, updatedList = pcall(function()
+		return DataStore:UpdateAsync(playerKey, function(currentTable)
+			if currentTable == nil then return {} end
+
+			-- If the pocket already exists, we do not add it
+			for _, p in ipairs(currentTable) do
+				if p.PlaceId == pocketData.PlaceId and p.PocketCounter == pocketData.PocketCounter then
+					return currentTable
+				end
+			end
+
+			table.insert(currentTable, pocketData)
+			return currentTable
+		end)
+	end)
+	if not success then
+		print("[MetaPortal] UpdateAsync fail for " .. playerKey .. " with ".. updatedList)
+		return
+	end
+end
+
 function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 	if portal == nil then
 		print("[MetaPortal] CreatePocket passed a nil portal")
@@ -722,23 +748,9 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 		return
 	end
 
-	-- Add this to the list of pockets created by this player
-	local playerKey = MetaPortal.KeyForUser(plr)
-	success, updatedList = pcall(function()
-		return DataStore:UpdateAsync(playerKey, function(currentTable)
-			if currentTable == nil then currentTable = {} end
-			table.insert(currentTable, pocketData)
-			return currentTable
-		end)
-	end)
-	if not success then
-		print("[MetaPortal] UpdateAsync fail for " .. playerKey .. " with ".. updatedList)
-		return
-	end
-
-	print("Length of current pocket list for player "..#updatedList)
-	
+	MetaPortal.AddPocketToListForPlayer(plr, pocketData)
 	MetaPortal.AttachValuesToPocketPortal(portal, pocketData)
+
 	local connection = MetaPortal.PocketInitTouchConnections[portal]
 	if connection ~= nil then
 		connection:Disconnect()
@@ -966,13 +978,17 @@ function MetaPortal.UnlinkPortal(plr, portal)
 
 	-- Erase the contents stored for this portal
 	local portalKey = MetaPortal.KeyForPortal(portal)
-	local success, errormessage = pcall(function()
+	local success, pocketJSON = pcall(function()
 		return DataStore:RemoveAsync(portalKey)
 	end)
 	if not success then
-		print("[MetaPortal] SetAsync fail for " .. portalKey .. " with ".. errormessage)
+		print("[MetaPortal] SetAsync fail for " .. portalKey .. " with ".. pocketJSON)
 		return
 	end
+
+	-- Make sure this pocket is in the list of pockets for the player
+	local pocketData = HTTPService:JSONDecode(pocketJSON)
+	MetaPortal.AddPocketToListForPlayer(plr, pocketData)
 
 	local teleportPart = portal.PrimaryPart
 	teleportPart.Material = Enum.Material.Glass
