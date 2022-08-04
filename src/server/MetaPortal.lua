@@ -73,7 +73,15 @@ function MetaPortal.Init()
 		MetaPortal.InitPocketPortals()
 	end
 	
-	ArriveRemoteEvent.OnServerEvent:Connect(MetaPortal.PlayerArrive)
+	--ArriveRemoteEvent.OnServerEvent:Connect(MetaPortal.PlayerArrive)
+
+	Players.PlayerAdded:Connect(function(plr)
+		MetaPortal.PlayerArrive(plr)
+	end)
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		MetaPortal.PlayerArrive(plr)
+	end
 	
 	GotoEvent.OnServerEvent:Connect(function(plr,pocketText)
 		MetaPortal.GotoPocketHandler(plr,pocketText)
@@ -104,8 +112,6 @@ function MetaPortal.PocketsForPlayer(plr)
 		return
 	end
 
-	print("Fetching pockets for "..plr.UserId)
-	
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 
 	-- This can be triggered via remote function from the client, via GUI
@@ -257,6 +263,17 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 		OriginJobId = game.JobId,
 		PocketCounter = pocketCounter
 	}
+
+	-- Workaround for current bug in LaunchData
+	local joinData = plr:GetJoinData()
+	if passThrough then
+		teleportData.IgnoreLaunchData = true
+	end
+
+	if joinData.TeleportData ~= nil and joinData.TeleportData.IgnoreLaunchData ~= nil then
+		print("[MetaPortal] Found IgnoreLaunchData in TeleportData")
+		teleportData.IgnoreLaunchData = joinData.TeleportData.IgnoreLaunchData
+	end
 
 	MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessCode)
 
@@ -614,6 +631,13 @@ function MetaPortal.FirePortal(portal, plr)
 
 			MetaPortal.StoreReturnToPocketData(plr, placeId, v, w)
 		end
+	end
+
+	-- Workaround for current bug in LaunchData
+	local joinData = plr:GetJoinData()
+	if joinData.TeleportData ~= nil and joinData.TeleportData.IgnoreLaunchData ~= nil then
+		print("[MetaPortal] Found IgnoreLaunchData in TeleportData")
+		teleportData.IgnoreLaunchData = joinData.TeleportData.IgnoreLaunchData
 	end
 	
 	teleportOptions:SetTeleportData(teleportData)
@@ -1028,16 +1052,23 @@ function MetaPortal.PlayerArrive(plr)
 	end
 
 	if joinData.TeleportData and joinData.TeleportData.pocket then
+		print("[MetaPortal] Passing user "..plr.DisplayName.." through to "..teleportData.pocket)
 		local passThrough = true
 		MetaPortal.GotoPocketHandler(plr, teleportData.pocket, passThrough)
 		return
 	end
 
-	if joinData.LaunchData and joinData.LaunchData ~= "" then
+	-- Workaround for current bug in LaunchData
+	local ignoreLaunchData = false
+	if joinData.TeleportData ~= nil and joinData.TeleportData.IgnoreLaunchData ~= nil then
+		ignoreLaunchData = joinData.TeleportData.IgnoreLaunchData
+	end
+
+	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
 		print("[MetaPortal] User "..plr.DisplayName.." arrived with launch data "..joinData.LaunchData)
 
 		local passThrough = true
-		MetaPortal.GotoPocketHandler(plr,joinData.LaunchData, passThrough)
+		MetaPortal.GotoPocketHandler(plr,joinData.LaunchData, passThrough)		
 		return
 	end
 end

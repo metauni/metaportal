@@ -140,7 +140,7 @@ if localCharacter then
 		end
 	end
 
-	ArriveRemoteEvent:FireServer()
+	--ArriveRemoteEvent:FireServer()
 end
 
 local function EndUnlinkPortalMode()
