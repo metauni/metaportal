@@ -5,6 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
 local VRService = game:GetService("VRService")
+local StarterGui = game:GetService("StarterGui")
+local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
 
 local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
 local Config = require(Common.Config)
@@ -18,6 +21,7 @@ local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local PocketNameRemoteFunction = Common.Remotes.PocketName
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
+local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
 
 local localPlayer = Players.LocalPlayer
 
@@ -28,6 +32,49 @@ local newPocketGui = localPlayer.PlayerGui:WaitForChild("NewPocketGui")
 local teleportScreenGui = Common.TeleportScreenGui:Clone()
 
 local portalTouchedConnections = {}
+
+SetTeleportGuiRemoteEvent.OnClientEvent:Connect(function(pocket)
+	local pocketImages = Config.PocketTeleportBackgrounds
+	local function getPocketBackground(pocketName: string)
+		local imageId = pocketImages["Alpha Cove"] -- default to Alpha Cove
+		
+		for name, image in pocketImages do
+			if string.find(pocketName, name, 1, true) then
+				imageId = image
+			end
+		end
+		
+		return imageId
+	end
+
+	local teleportGui = Common.PocketTeleportGui:Clone()
+	teleportGui.PocketImage.Image = getPocketBackground(pocket)
+	teleportGui.PocketName.Text = pocket
+	
+	StarterGui:SetCore("TopbarEnabled", false)
+	teleportGui.Parent = localPlayer:FindFirstChild("PlayerGui")
+	
+	TeleportService:SetTeleportGui(teleportGui)
+
+	if VRService.VREnabled then
+		local colorCorrection = Instance.new("ColorCorrectionEffect")
+		colorCorrection.Enabled = true
+		colorCorrection.Parent = game.Lighting
+
+		local tweenInfo = TweenInfo.new(
+			2, -- Time
+			Enum.EasingStyle.Linear, -- EasingStyle
+			Enum.EasingDirection.Out, -- EasingDirection
+			0, -- RepeatCount (when less than zero the tween will loop indefinitely)
+			false, -- Reverses (tween will reverse once reaching it's goal)
+			0 -- DelayTime
+		)
+
+		local tween = TweenService:Create(colorCorrection, tweenInfo, {Brightness = -1})
+
+		tween:Play()
+	end
+end)
 
 local function InitPortal(portal)
 	local teleportPart = portal.PrimaryPart
@@ -43,6 +90,8 @@ local function InitPortal(portal)
 
 		local humanoid = otherPart.Parent:FindFirstChildWhichIsA("Humanoid")
 		if humanoid then
+			-- Don't trigger a teleport when a VR player tries to draw
+			-- on the portal with their hand
 			if VRService.VREnabled then
 				if otherPart.Name == "MetaChalk" or
 						otherPart.Name == "RightHand" or
@@ -64,10 +113,10 @@ local function InitPortal(portal)
 						end
 					end
 					
-					if CollectionService:HasTag(portal, "metapocket") then
-						teleportScreenGui.Portal.Value = portal
+					-- Don't put up this GUI for pockets
+					if not CollectionService:HasTag(portal, "metapocket") then
+						teleportScreenGui.Parent = localPlayer.PlayerGui	
 					end
-					teleportScreenGui.Parent = localPlayer.PlayerGui
 					
 					FirePortalEvent:FireServer(portal)
 				end
@@ -139,8 +188,6 @@ if localCharacter then
 			start.Label.SurfaceGui.TextLabel.Text = labelText
 		end
 	end
-
-	--ArriveRemoteEvent:FireServer()
 end
 
 local function EndUnlinkPortalMode()
@@ -286,6 +333,10 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	})
 	icon:setTheme(Themes["BlueGradient"])
 	
+	SetTeleportGuiRemoteEvent.OnClientEvent:Connect(function()
+		icon:setEnabled(false)
+	end)
+
 	gotoPortalGui.Changed:Connect(function()
 		if not gotoPortalGui.Enabled then
 			icon:deselect()

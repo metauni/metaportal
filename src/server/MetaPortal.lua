@@ -15,7 +15,6 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local HTTPService = game:GetService("HttpService")
 local DataStoreService = game:GetService("DataStoreService")
-local VRService = game:GetService("VRService")
 local RunService = game:GetService("RunService")
 
 -- Requires
@@ -34,6 +33,7 @@ local LinkPocketEvent = Common.Remotes.LinkPocket
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 local PocketsForPlayerRemoteFunction = Common.Remotes.PocketsForPlayer
+local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
 
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
@@ -194,16 +194,15 @@ end
 -- want to make a ghost or show the interstitial GUI
 function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
 	if passThrough == nil then passThrough = false end
-
-	if not passThrough and not VRService.VREnabled then
-		local screenGui = Common.TeleportScreenGui:Clone()
-		if plr == nil then
-			print("[MetaPortal] Passed nil player to GotoPocket")
-			return
-		end
-	
-		screenGui.Parent = plr.PlayerGui
+	if plr == nil then
+		print("[MetaPortal] Passed nil player to GotoPocket")
+		return
 	end
+
+	-- Set the teleportGUI on the client
+	local pocketName = MetaPortal.PocketNameFromPlaceId(placeId) .. " " .. pocketCounter
+	SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
+	wait(1) -- let the local teleport GUI get set
 
 	local character = plr.Character
 
@@ -572,8 +571,6 @@ function MetaPortal.FirePortal(portal, plr)
 	local returnPortal = portal:FindFirstChild("Return") and portal.Return.Value
 	local playerTeleportData = MetaPortal.TeleportData[plr.UserId]
 	
-	--teleportPart.Sound:Play()
-	
 	plr.Character:Destroy()
 	for _, item in pairs(plr.Backpack:GetChildren()) do
 		item:Destroy()
@@ -587,6 +584,11 @@ function MetaPortal.FirePortal(portal, plr)
 	
 	-- If the portal leads to a pocket
 	if CollectionService:HasTag(portal, "metapocket") then
+		-- Set the teleportGUI on the client
+		local pocketName = MetaPortal.PocketNameFromPlaceId(placeId) .. " " .. portal.PocketCounter.Value
+		SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
+		wait(1) -- let the local teleport GUI get set
+
 		teleportData.OriginPersistId = portal.PersistId.Value -- portal you came from
 		teleportData.PocketCounter = portal.PocketCounter.Value
 		teleportData.CreatorId = portal.CreatorId.Value
@@ -1065,11 +1067,17 @@ function MetaPortal.PlayerArrive(plr)
 	end
 
 	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
-		print("[MetaPortal] User "..plr.DisplayName.." arrived with launch data "..joinData.LaunchData)
+		local prefixStart, prefixEnd = string.find(joinData.LaunchData,"pocket:",1)
+		if prefixStart ~= nil then
+			local pocketName = string.sub(joinData.LaunchData,prefixEnd+1,-1)
+			if pocketName ~= nil and pocketName ~= "" then
+				print("[MetaPortal] User "..plr.DisplayName.." arrived with pocket launch data "..pocketName)
 
-		local passThrough = true
-		MetaPortal.GotoPocketHandler(plr,joinData.LaunchData, passThrough)		
-		return
+				local passThrough = true
+				MetaPortal.GotoPocketHandler(plr, pocketName, passThrough)		
+				return
+			end
+		end
 	end
 end
 

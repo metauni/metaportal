@@ -48,6 +48,10 @@
 		{
 			"Name": "PocketsForPlayer",
 			"ClassName": "RemoteFunction"
+		},
+		{
+			"Name": "SetTeleportGui",
+			"ClassName": "RemoteEvent"
 		}
 	]
 }

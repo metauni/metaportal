@@ -36,8 +36,18 @@ local Config = {
 		["Research Agora"] = "rbxassetid://10325295755",
 		["Between"] = "rbxassetid://10325550006",
 		["_PocketLink"] = "rbxassetid://10197036910"
+	},
+	PocketTeleportBackgrounds = {
+		["Alpha Cove"] = "rbxassetid://10089800875",
+		["Beta Forest"] = "rbxassetid://10089801224",
+		["Delta Plains"] = "rbxassetid://10089801527",
+		["Gamma Events"] = "rbxassetid://10089801706",
+		["Gemini Pulsar"] = "rbxassetid://10089801907",
+		["Songspires"] = "rbxassetid://10089802303",
+		["Symbolic Wilds"] = "rbxassetid://10089802146",
+		["Between"] = "rbxassetid://10503140390",
+		["Moonlight Forest"] = "rbxassetid://10503195169",
 	}
-	
 }
 
 return Config
