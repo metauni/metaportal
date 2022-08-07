@@ -8,6 +8,7 @@ local VRService = game:GetService("VRService")
 local StarterGui = game:GetService("StarterGui")
 local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
 local Config = require(Common.Config)
@@ -212,7 +213,51 @@ local function EndUnlinkPortalMode()
 	end
 end
 
+local function StartPocketURLMode()
+	local screenGui = localPlayer.PlayerGui:FindFirstChild("PocketURLGui")
+	if screenGui ~= nil then return end
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "PocketURLGui"
+
+	local button = Instance.new("TextButton")
+	button.Name = "OKButton"
+	button.BackgroundColor3 = Color3.fromRGB(148,148,148)
+	button.Size = UDim2.new(0,200,0,50)
+	button.Position = UDim2.new(0.5,-100,0.5,150)
+	button.Parent = screenGui
+	button.BackgroundColor3 = Color3.fromRGB(0,162,0)
+	button.TextColor3 = Color3.new(1,1,1)
+	button.TextSize = 25
+	button.Text = "OK"
+	button.Activated:Connect(function()
+		screenGui:Destroy()
+	end)
+	Instance.new("UICorner").Parent = button
+
+	local pocketName = HttpService:UrlEncode(PocketNameRemoteFunction:InvokeServer())
+
+	local textBox = Instance.new("TextBox")
+	textBox.Name = "TextBox"
+	textBox.BackgroundColor3 = Color3.new(0,0,0)
+	textBox.BackgroundTransparency = 0.3
+	textBox.Size = UDim2.new(0,800,0,200)
+	textBox.Position = UDim2.new(0.5,-400,0.5,-100)
+	textBox.TextColor3 = Color3.new(1,1,1)
+	textBox.TextSize = 20
+	textBox.Text = "https://www.roblox.com/games/start?placeId=" .. Config.RootPlaceId .. "&launchData=pocket:" .. pocketName
+	textBox.TextWrapped = true
+	textBox.TextEditable = false
+	textBox.ClearTextOnFocus = false
+	textBox.Parent = screenGui
+
+	screenGui.Parent = localPlayer.PlayerGui
+end
+
 local function StartUnlinkPortalMode()
+	local screenGui = localPlayer.PlayerGui:FindFirstChild("UnlinkPortalGui")
+	if screenGui ~= nil then return end
+	
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "UnlinkPortalGui"
 
@@ -292,6 +337,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
 	end
 
+	
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
 	icon:setLabel("Pockets")
@@ -317,20 +363,36 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		end)
 		:bindToggleKey(Config.ShortcutKey),
 		Icon.new()
-		:setLabel("Return to Pocket")
-		:bindEvent("selected", function(self)
-			self:deselect()
-			icon:deselect()
-			ReturnToLastPocketEvent:FireServer()
-		end),
-		Icon.new()
 		:setLabel("Unlink Portal...")
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()
 			StartUnlinkPortalMode()
 		end)
-	})
+	}) 
+
+	if not isPocket then
+		local backIcon = Icon.new()
+		backIcon:setLabel("Back to Pocket")
+		backIcon:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			ReturnToLastPocketEvent:FireServer()
+		end)
+		backIcon:join(icon, "dropdown")
+	end
+
+	if isPocket then
+		local urlIcon = Icon.new()
+		urlIcon:setLabel("URL for Pocket...")
+		urlIcon:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			StartPocketURLMode()
+		end)
+		urlIcon:join(icon, "dropdown")
+	end
+	
 	icon:setTheme(Themes["BlueGradient"])
 	
 	SetTeleportGuiRemoteEvent.OnClientEvent:Connect(function()

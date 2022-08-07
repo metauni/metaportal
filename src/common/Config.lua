@@ -6,6 +6,7 @@ local Config = {
 	Version = "v0.4.0",
 	PocketQuota = 1,
 	ShortcutKey = Enum.KeyCode.K,
+	RootPlaceId = 8165217582,
 	PlaceIdOfPockets = {
 		["Alpha Cove"] = 8465004288,
 		["Beta Forest"] = 9234595050,

@@ -585,9 +585,14 @@ function MetaPortal.FirePortal(portal, plr)
 	-- If the portal leads to a pocket
 	if CollectionService:HasTag(portal, "metapocket") then
 		-- Set the teleportGUI on the client
-		local pocketName = MetaPortal.PocketNameFromPlaceId(placeId) .. " " .. portal.PocketCounter.Value
-		SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
-		wait(1) -- let the local teleport GUI get set
+		local templateName = MetaPortal.PocketNameFromPlaceId(placeId)
+		if templateName ~= nil then
+			local pocketName = templateName .. " " .. portal.PocketCounter.Value
+			SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
+			wait(1) -- let the local teleport GUI get set
+		else
+			print("[MetaPortal] WARNING: Failed to get pocket name to set TeleportGui")
+		end
 
 		teleportData.OriginPersistId = portal.PersistId.Value -- portal you came from
 		teleportData.PocketCounter = portal.PocketCounter.Value
