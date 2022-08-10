@@ -383,7 +383,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		end)
 	}) 
 
-	if not isPocket then
+	if not Common:GetAttribute("IsPocket") then
 		local backIcon = Icon.new()
 		backIcon:setLabel("Back to Pocket")
 		backIcon:bindEvent("selected", function(self)
@@ -394,7 +394,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		backIcon:join(icon, "dropdown")
 	end
 
-	if isPocket then
+	if Common:GetAttribute("IsPocket") then
 		local urlIcon = Icon.new()
 		urlIcon:setLabel("URL for Pocket...")
 		urlIcon:bindEvent("selected", function(self)
