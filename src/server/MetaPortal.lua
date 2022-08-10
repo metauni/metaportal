@@ -27,7 +27,6 @@ local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
 local CreatePocketEvent = Common.Remotes.CreatePocket
 local FirePortalEvent = Common.Remotes.FirePortal
-local PocketNameRemoteFunction = Common.Remotes.PocketName
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local LinkPocketEvent = Common.Remotes.LinkPocket
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
@@ -51,6 +50,9 @@ local MetaPortal = {}
 MetaPortal.__index = MetaPortal
 
 function MetaPortal.Init()
+
+	Common:SetAttribute("IsPocket", isPocket())
+
 	MetaPortal.TeleportData = {} -- stores information for each player teleporting in
 	MetaPortal.PocketInit = false
 	MetaPortal.PocketData = nil
@@ -94,7 +96,6 @@ function MetaPortal.Init()
 	TeleportService.TeleportInitFailed:Connect(MetaPortal.TeleportFailed)
 	CreatePocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocket)
 	LinkPocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocketLink)
-	PocketNameRemoteFunction.OnServerInvoke = MetaPortal.PocketName
 	IsPocketRemoteFunction.OnServerInvoke = isPocket
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
 	UnlinkPortalRemoteEvent.OnServerEvent:Connect(MetaPortal.UnlinkPortal)
@@ -200,7 +201,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 	end
 
 	-- Set the teleportGUI on the client
-	local pocketName = MetaPortal.PocketNameFromPlaceId(placeId) .. " " .. pocketCounter
+	local pocketName = MetaPortal.PocketTemplateNameFromPlaceId(placeId) .. " " .. pocketCounter
 	SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
 	wait(1) -- let the local teleport GUI get set
 
@@ -428,14 +429,14 @@ function MetaPortal.InitPocket(data)
 	end
 	
 	-- This data is used for interop
-	local idValue = workspace:FindFirstChild("PocketId")
-	if not idValue then
-		idValue = Instance.new("StringValue")
-		idValue.Name = "PocketId"
-		idValue.Value = game.PlaceId .. "-" .. data.PocketCounter
-		idValue.Parent = workspace
-		print("[MetaPortal] PocketId " .. idValue.Value)
-	end
+	local pocketId = game.PlaceId .. "-" .. data.PocketCounter
+	script.Parent:SetAttribute("PocketId", pocketId)
+	Common:SetAttribute("PocketId", pocketId)
+	print("[MetaPortal] PocketId: " .. pocketId)
+
+	local pocketName = MetaPortal.PocketName(data.PocketCounter)
+	Common:SetAttribute("PocketName", pocketName)
+	print("[MetaPortal] PocketName: " .. pocketName)
 		
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 	
@@ -488,24 +489,15 @@ function MetaPortal.InitPocket(data)
 	MetaPortal.InitPocketPortals()
 end
 
-function MetaPortal.PocketName()
-	if not isPocket() then
-		return nil
-	end
-	
-	if MetaPortal.PocketData == nil then
-		print("[MetaPortal] Cannot return name of un-initialised pocket")
-		return
-	end
-
-	local pocketName = MetaPortal.PocketNameFromPlaceId(game.PlaceId)
+function MetaPortal.PocketName(pocketCounter)
+	local pocketName = MetaPortal.PocketTemplateNameFromPlaceId(game.PlaceId)
 	local labelText = ""
 
 	if pocketName ~= nil then
 		labelText = labelText .. pocketName
 	end
 
-	labelText = labelText .. " " .. tostring(MetaPortal.PocketData.PocketCounter)
+	labelText = labelText .. " " .. tostring(pocketCounter)
 
 	return labelText
 end
@@ -585,7 +577,7 @@ function MetaPortal.FirePortal(portal, plr)
 	-- If the portal leads to a pocket
 	if CollectionService:HasTag(portal, "metapocket") then
 		-- Set the teleportGUI on the client
-		local templateName = MetaPortal.PocketNameFromPlaceId(placeId)
+		local templateName = MetaPortal.PocketTemplateNameFromPlaceId(placeId)
 		if templateName ~= nil then
 			local pocketName = templateName .. " " .. portal.PocketCounter.Value
 			SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
@@ -788,7 +780,7 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 	end
 end
 
-function MetaPortal.PocketNameFromPlaceId(placeId)
+function MetaPortal.PocketTemplateNameFromPlaceId(placeId)
 	local pocketName = nil
 	for key, value in pairs(Config.PlaceIdOfPockets) do
 		if value == placeId then
@@ -829,7 +821,7 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 		local gui = label.SurfaceGui
 		local text = gui.TextLabel	
 		local labelText = ""
-		local pocketName = MetaPortal.PocketNameFromPlaceId(data.PlaceId)
+		local pocketName = MetaPortal.PocketTemplateNameFromPlaceId(data.PlaceId)
 		if pocketName ~= nil then
 			labelText = labelText .. pocketName
 		end
@@ -871,13 +863,13 @@ function MetaPortal.KeyForPortal(portal)
 		-- We are in a pocket
 		-- and so the key to look up this pocket portal also needs
 		-- to involve the unique identifier of the pocket
-		local idValue = workspace:FindFirstChild("PocketId")
-		if not idValue then
+		local pocketId = script.Parent:GetAttribute("PocketId")
+		if not pocketId then
 			print("[MetaPortal] Failed to initialise pocket portal")
 			return
 		end
 
-		portalKey = "metapocket/portal/"..idValue.Value.."-"..persistId
+		portalKey = "metapocket/portal/"..pocketId.Value.."-"..persistId
 	else
 		-- In the top level server we just use the PersistId as a key
 		portalKey = "metapocket/portal/"..persistId

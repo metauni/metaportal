@@ -19,7 +19,6 @@ local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
 local FirePortalEvent = Common.Remotes.FirePortal
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
-local PocketNameRemoteFunction = Common.Remotes.PocketName
 local IsPocketRemoteFunction = Common.Remotes.IsPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
@@ -329,12 +328,19 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local Icon = require(game:GetService("ReplicatedStorage").Icon)
 	local Themes =  require(game:GetService("ReplicatedStorage").Icon.Themes)
 	
-	local locationName = "At the root"
-	local isPocket = IsPocketRemoteFunction:InvokeServer()
-	if isPocket then
-		game.Workspace:WaitForChild("PocketId") -- wait for the server to finish loading
-		wait(1)
-		locationName = PocketNameRemoteFunction:InvokeServer() or "Unknown"
+	if Common:GetAttribute("IsPocket") == nil then
+		Common:GetAttributeChangedSignal("IsPocket"):Wait()
+	end
+
+	local locationName
+	if Common:GetAttribute("IsPocket") then
+		-- We are in a pocket
+		if Common:GetAttribute("PocketName") == nil then
+			Common:GetAttributeChangedSignal("PocketName"):Wait()
+		end
+		locationName = "In "..Common:GetAttribute("PocketName")
+	else
+		locationName = "At the root"
 	end
 
 	
@@ -346,9 +352,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	icon:setDropdown({
 		Icon.new()
 		:setLabel(locationName)
-		:bindEvent("selected", function(self)
-			self:deselect()
-		end),
+		:lock(),
 		Icon.new()
 		:setLabel("Goto Pocket...")
 		:bindEvent("selected", function(self)
