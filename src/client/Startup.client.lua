@@ -248,6 +248,14 @@ local function StartPocketURLMode()
 	textBox.TextWrapped = true
 	textBox.TextEditable = false
 	textBox.ClearTextOnFocus = false
+	
+	local padding = Instance.new("UIPadding")
+	padding.PaddingBottom = UDim.new(0,10)
+	padding.PaddingTop = UDim.new(0,10)
+	padding.PaddingRight = UDim.new(0,10)
+	padding.PaddingLeft = UDim.new(0,10)
+	padding.Parent = textBox
+
 	textBox.Parent = screenGui
 
 	screenGui.Parent = localPlayer.PlayerGui
