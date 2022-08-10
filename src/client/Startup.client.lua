@@ -234,7 +234,7 @@ local function StartPocketURLMode()
 	end)
 	Instance.new("UICorner").Parent = button
 
-	local pocketName = HttpService:UrlEncode(PocketNameRemoteFunction:InvokeServer())
+	local pocketName = HttpService:UrlEncode(Common:GetAttribute("PocketName"))
 
 	local textBox = Instance.new("TextBox")
 	textBox.Name = "TextBox"
