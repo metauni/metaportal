@@ -7,10 +7,6 @@
 			"$className": "ServerScriptService",
 			"$ignoreUnknownInstances": true,
 
-			"version": {
-				"$path": "./version.txt"
-			},
-
 			"metaportal": {
 				"$className": "Folder",
 				"$path": "src/server",
