@@ -3,7 +3,6 @@ local Config = {
 	PocketTag = "metapocket",
 	PocketDataStoreTag = "metapocket",
 	DataStoreTag = "metaportal",
-	Version = "v0.4.1",
 	PocketQuota = 1,
 	ShortcutKey = Enum.KeyCode.K,
 	RootPlaceId = 8165217582,

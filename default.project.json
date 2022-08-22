@@ -1,28 +1,32 @@
 {
-    "name": "metaportal",
-    "tree": {
-        "$className": "DataModel",
+	"name": "metaportal",
+	"tree": {
+		"$className": "DataModel",
 
-        "ServerScriptService": {
-            "$className": "ServerScriptService",
-            "$ignoreUnknownInstances": true,
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"$ignoreUnknownInstances": true,
 
-            "metaportal": {
-                "$className": "Folder",
-                "$path": "src/server",
-        
-                "MetaPortalCommon": {
-                    "$path": "src/common"
-                },
-        
-                "MetaPortalPlayer" : {
-                    "$path": "src/client"
-                },
-        
-                "MetaPortalGui" : {
-                    "$path": "src/gui"
-                }
-            }
-        }
-    }
+			"version": {
+				"$path": "./version.txt"
+			},
+
+			"metaportal": {
+				"$className": "Folder",
+				"$path": "src/server",
+
+				"MetaPortalCommon": {
+					"$path": "src/common"
+				},
+
+				"MetaPortalPlayer" : {
+					"$path": "src/client"
+				},
+
+				"MetaPortalGui" : {
+					"$path": "src/gui"
+				}
+			}
+		}
+	}
 }

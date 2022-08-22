@@ -101,7 +101,10 @@ function MetaPortal.Init()
 	UnlinkPortalRemoteEvent.OnServerEvent:Connect(MetaPortal.UnlinkPortal)
 	PocketsForPlayerRemoteFunction.OnServerInvoke = MetaPortal.PocketsForPlayer
 
-	print("[MetaPortal] "..Config.Version.." initialised")
+	local versionValue = script.Parent:FindFirstChild("version")
+	local ver = versionValue and versionValue.Value or ""
+
+	print("[MetaPortal] "..ver.." initialised")
 end
 
 local pocketsForPlayerCache = {}

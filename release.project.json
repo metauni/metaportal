@@ -4,6 +4,10 @@
 		"$className": "Folder",
 		"$path": "src/server",
 
+		"version": {
+			"$path": "./version.txt"
+		},
+
 		"MetaPortalCommon": {
 			"$path": "src/common"
 		},
