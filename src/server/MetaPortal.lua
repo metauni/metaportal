@@ -872,7 +872,7 @@ function MetaPortal.KeyForPortal(portal)
 			return
 		end
 
-		portalKey = "metapocket/portal/"..pocketId.Value.."-"..persistId
+		portalKey = "metapocket/portal/"..pocketId.."-"..persistId
 	else
 		-- In the top level server we just use the PersistId as a key
 		portalKey = "metapocket/portal/"..persistId
