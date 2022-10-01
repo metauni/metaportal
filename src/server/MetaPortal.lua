@@ -794,6 +794,27 @@ function MetaPortal.PocketTemplateNameFromPlaceId(placeId)
 	return pocketName
 end
 
+local userNameCache = {}
+
+function getNameFromUserId(userId)
+	local nameFromCache = userNameCache[userId]
+	if nameFromCache then
+		return nameFromCache
+	end
+
+	local userName
+	local success, _ = pcall(function()
+		userName = Players:GetNameFromUserIdAsync(userId)
+	end)
+	if success then
+		userNameCache[userId] = userName
+		return userName
+	end
+	
+	print("[MetaPortal] Unable to find name for UserId:", userId)
+	return nil
+end
+
 function MetaPortal.AttachValuesToPocketPortal(portal, data)
 	if portal:FindFirstChild("AccessCode") then portal.AccessCode:Destroy() end
 	local accessCode = Instance.new("StringValue")
@@ -830,6 +851,21 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 		end
 		labelText = labelText .. " " .. tostring(data.PocketCounter)
 		text.Text = labelText
+	end
+
+	-- Create the creator label
+	if label and data.CreatorId ~= nil then
+		local creatorName = getNameFromUserId(data.CreatorId)
+		if creatorName ~= nil then
+			local creatorLabel = label:Clone()
+			creatorLabel.Size = 0.4 * label.Size
+
+			local offset = CFrame.new(0,-1.6,0)
+			creatorLabel.CFrame = label.CFrame:ToWorldSpace(offset)
+			creatorLabel.SurfaceGui.TextLabel.Text = creatorName
+			creatorLabel.SurfaceGui.TextLabel.TextTransparency = 0.6
+			creatorLabel.Parent = portal
+		end
 	end
 
 	if portal:FindFirstChild("SurfaceLight") then portal.SurfaceLight:Destroy() end
