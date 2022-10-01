@@ -17,12 +17,14 @@ local Config = {
 		["Moonlight Forest"] = 10302055084,
 		["Risen Sea"] = 10323385373,
 		["Research Agora"] = 10323359931,
-		["Between"] = 10302082510},
+		["Between"] = 10302082510,
+		["Big Sir"] = 10914686380},
 	AvailablePockets = {
 		"Between",
 		"Delta Plains",
 		"Gamma Events",
-		"Symbolic Wilds"
+		"Symbolic Wilds",
+		"Big Sir"
 	},
 	PocketBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://9409223438",
@@ -35,6 +37,7 @@ local Config = {
 		["Risen Sea"] = "rbxassetid://10325295394",
 		["Research Agora"] = "rbxassetid://10325295755",
 		["Between"] = "rbxassetid://10325550006",
+		["Big Sir"] = "rbxassetid://10920372315",
 		["_PocketLink"] = "rbxassetid://10197036910"
 	},
 	PocketTeleportBackgrounds = {
@@ -47,6 +50,7 @@ local Config = {
 		["Symbolic Wilds"] = "rbxassetid://10089802146",
 		["Between"] = "rbxassetid://10503140390",
 		["Moonlight Forest"] = "rbxassetid://10503195169",
+		["Big Sir"] = "rbxassetid://10920332480"
 	}
 }
 
