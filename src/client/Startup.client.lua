@@ -330,6 +330,10 @@ local function StartUnlinkPortalMode()
 	end
 end
 
+local function returnToRisingSea()
+
+end
+
 -- Create the menu items
 -- icon is https://fonts.google.com/icons?icon.query=door
 if ReplicatedStorage:FindFirstChild("Icon") then
@@ -401,6 +405,17 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			self:deselect()
 			icon:deselect()
 			StartPocketURLMode()
+		end)
+		urlIcon:join(icon, "dropdown")
+	end
+
+	if Common:GetAttribute("IsPocket") then
+		local urlIcon = Icon.new()
+		urlIcon:setLabel("Goto The Rising Sea")
+		urlIcon:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			GotoEvent:FireServer("The Rising Sea")
 		end)
 		urlIcon:join(icon, "dropdown")
 	end

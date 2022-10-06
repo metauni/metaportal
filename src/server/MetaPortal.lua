@@ -381,6 +381,10 @@ function MetaPortal.PocketDataFromPocketName(pocketText)
 end
 
 function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
+	if pocketText == "The Rising Sea" then
+		MetaPortal.ReturnToRoot(plr)
+	end
+
 	if passThrough == nil then passThrough = false end
 	local placeId, pocketData = MetaPortal.PocketDataFromPocketName(pocketText)
 	if placeId == nil or pocketData == nil then return end
@@ -542,6 +546,37 @@ function MetaPortal.InitPortal(portal)
 	fire.Parent = teleportPart
 	
 	-- NOTE: Attaching touch events is now done on the client
+end
+
+function MetaPortal.ReturnToRoot(plr)
+	plr.Character:Destroy()
+	for _, item in pairs(plr.Backpack:GetChildren()) do
+		item:Destroy()
+	end
+
+	local teleportOptions = Instance.new("TeleportOptions")
+	local teleportData = {
+		OriginPlaceId = game.PlaceId,
+		OriginJobId = game.JobId
+	}
+
+	local placeId = Config.RootPlaceId
+
+	-- Workaround for current bug in LaunchData
+	local joinData = plr:GetJoinData()
+	if joinData.TeleportData ~= nil and joinData.TeleportData.IgnoreLaunchData ~= nil then
+		print("[MetaPortal] Found IgnoreLaunchData in TeleportData")
+		teleportData.IgnoreLaunchData = joinData.TeleportData.IgnoreLaunchData
+	end
+	
+	teleportOptions:SetTeleportData(teleportData)
+	
+	local success, errormessage = pcall(function()
+		return TeleportService:TeleportAsync(placeId, {plr}, teleportOptions)
+	end)
+	if not success then
+		print("[MetaPortal] TeleportAsync failed: ".. errormessage)
+	end
 end
 
 function MetaPortal.FirePortal(portal, plr)
