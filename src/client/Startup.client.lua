@@ -372,7 +372,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			icon:deselect()
 			gotoPortalGui.Enabled = true
 			wait(0.1)
-			gotoPortalGui.TextBox:CaptureFocus()
+			gotoPortalGui.Frame.TextBox:CaptureFocus()
 		end)
 		:bindEvent("deselected", function(self)
 			gotoPortalGui.Enabled = false
