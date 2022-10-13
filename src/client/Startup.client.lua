@@ -156,8 +156,7 @@ if localCharacter then
 			for _, pocket in ipairs(pockets) do
 				if pocket:FindFirstChild("PersistId") then
 					if pocket.PersistId.Value == teleportData.TargetPersistId then
-						local pocketCFrame = pocket.PrimaryPart.CFrame
-						local newCFrame = pocketCFrame + pocketCFrame.LookVector * 10
+						local newCFrame = pocket:GetPivot() * CFrame.new(0, 0, -10)
 						
 						wait(0.1)
 						
@@ -372,7 +371,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 			icon:deselect()
 			gotoPortalGui.Enabled = true
 			wait(0.1)
-			gotoPortalGui.TextBox:CaptureFocus()
+			gotoPortalGui.Frame.TextBox:CaptureFocus()
 		end)
 		:bindEvent("deselected", function(self)
 			gotoPortalGui.Enabled = false
