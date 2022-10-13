@@ -18,13 +18,15 @@ local Config = {
 		["Risen Sea"] = 10323385373,
 		["Research Agora"] = 10323359931,
 		["Between"] = 10302082510,
-		["Big Sir"] = 10914686380},
+		["Big Sir"] = 10914686380,
+		["Cstar Bridge"] = 11256938156},
 	AvailablePockets = {
 		"Between",
 		"Delta Plains",
 		"Gamma Events",
 		"Symbolic Wilds",
-		"Big Sir"
+		"Big Sir",
+		"Cstar Bridge"
 	},
 	PocketBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://9409223438",
@@ -38,7 +40,8 @@ local Config = {
 		["Research Agora"] = "rbxassetid://10325295755",
 		["Between"] = "rbxassetid://10325550006",
 		["Big Sir"] = "rbxassetid://10920372315",
-		["_PocketLink"] = "rbxassetid://10197036910"
+		["_PocketLink"] = "rbxassetid://10197036910",
+		["Cstar Bridge"] = "rbxassetid://10325550006"
 	},
 	PocketTeleportBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://10089800875",
@@ -50,7 +53,8 @@ local Config = {
 		["Symbolic Wilds"] = "rbxassetid://10089802146",
 		["Between"] = "rbxassetid://10503140390",
 		["Moonlight Forest"] = "rbxassetid://10503195169",
-		["Big Sir"] = "rbxassetid://10920332480"
+		["Big Sir"] = "rbxassetid://10920332480",
+		["Cstar Bridge"] = "rbxassetid://10503140390"
 	}
 }
 
