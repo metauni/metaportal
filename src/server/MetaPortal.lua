@@ -264,7 +264,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 	local teleportData = {
 		OriginPlaceId = game.PlaceId,
 		OriginJobId = game.JobId,
-		PocketCounter = pocketCounter
+		PocketCounter = pocketCounter,
 		AccessCode = accessCode,
 	}
 
