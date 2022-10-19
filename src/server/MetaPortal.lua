@@ -265,6 +265,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 		OriginPlaceId = game.PlaceId,
 		OriginJobId = game.JobId,
 		PocketCounter = pocketCounter
+		AccessCode = accessCode,
 	}
 
 	-- Workaround for current bug in LaunchData
