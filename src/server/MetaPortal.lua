@@ -229,6 +229,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 			if desc:IsA("BasePart") then
 				desc.Transparency = 1 - (0.2 * (1 - desc.Transparency))
 				desc.CastShadow = false
+				desc.CanCollide = false
 				desc.Anchored = true
 			end
 		end
