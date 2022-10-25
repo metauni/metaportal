@@ -23,12 +23,11 @@ local Config = {
 	AvailablePockets = {
 		"Between",
 		"Delta Plains",
-		"Gamma Events",
 		"Symbolic Wilds",
 		"Big Sir",
 		"Cstar Bridge"
 	},
-	PocketBackgrounds = {
+	PocketButtonBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://9409223438",
 		["Symbolic Wilds"] = "rbxassetid://10121182717",
 		["Gamma Events"] = "rbxassetid://9409218005",
@@ -41,7 +40,7 @@ local Config = {
 		["Between"] = "rbxassetid://10325550006",
 		["Big Sir"] = "rbxassetid://10920372315",
 		["_PocketLink"] = "rbxassetid://10197036910",
-		["Cstar Bridge"] = "rbxassetid://10325550006"
+		["Cstar Bridge"] = "rbxassetid://11373448066"
 	},
 	PocketTeleportBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://10089800875",
@@ -54,7 +53,7 @@ local Config = {
 		["Between"] = "rbxassetid://10503140390",
 		["Moonlight Forest"] = "rbxassetid://10503195169",
 		["Big Sir"] = "rbxassetid://10920332480",
-		["Cstar Bridge"] = "rbxassetid://10503140390"
+		["Cstar Bridge"] = "rbxassetid://11373442821"
 	}
 }
 

@@ -124,7 +124,7 @@ function MetaPortal.PocketsForPlayer(plr)
 	if pocketsForPlayerLastFetched[plr] ~= nil then
 		if pocketsForPlayerLastFetched[plr] > tick() - 60 then
 			print("[MetaPortal] Returning cached values for player "..plr.UserId)
-			-- return pocketsForPlayerCache[plr]
+			-- return pocketsForPlayerCache[plr] TODO
 		end
 	end
 
@@ -901,6 +901,7 @@ function MetaPortal.AttachValuesToPocketPortal(portal, data)
 			creatorLabel.CFrame = label.CFrame:ToWorldSpace(offset)
 			creatorLabel.SurfaceGui.TextLabel.Text = creatorName
 			creatorLabel.SurfaceGui.TextLabel.TextTransparency = 0.6
+			creatorLabel.Name = "CreatorLabel"
 			creatorLabel.Parent = portal
 		end
 	end
@@ -1098,6 +1099,11 @@ function MetaPortal.UnlinkPortal(plr, portal)
 		local gui = label.SurfaceGui
 		local text = gui.TextLabel	
 		text.Text = ""
+	end
+
+	local creatorLabel = portal:FindFirstChild("CreatorLabel")
+	if creatorLabel then
+		creatorLabel.SurfaceGui.TextLabel.Text = ""
 	end
 
 	portal.IsOpen.Value = false

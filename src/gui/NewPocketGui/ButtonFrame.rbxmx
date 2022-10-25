@@ -60,7 +60,7 @@
 			<token name="Style">0</token>
 			<BinaryString name="Tags"></BinaryString>
 			<bool name="Visible">true</bool>
-			<int name="ZIndex">10</int>
+			<int name="ZIndex">0</int>
 		</Properties>
 		<Item class="UICorner" referent="RBXE7C11F6CB757453886F8CA0EBA7308F1">
 			<Properties>

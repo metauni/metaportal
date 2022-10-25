@@ -7,7 +7,7 @@ local LinkPocketEvent = Common.Remotes.LinkPocket
 local PocketsForPlayerRemoteFunction = Common.Remotes.PocketsForPlayer
 
 local screenGui = script.Parent
-local pocketBackgrounds = Config.PocketBackgrounds
+local pocketBackgrounds = Config.PocketButtonBackgrounds
 
 local currentPortal = nil
 local lastInteractionTime = {} -- maps portals to our last interaction time
@@ -62,6 +62,7 @@ local function showLinkGui()
 			textButton.TextColor3 = Color3.new(1,1,1)
 			textButton.TextScaled = false
 			textButton.TextSize = 13
+			textButton.ZIndex = 2
 			textButton.TextXAlignment = Enum.TextXAlignment.Left
 			textButton.Parent = scrollingFrame
 

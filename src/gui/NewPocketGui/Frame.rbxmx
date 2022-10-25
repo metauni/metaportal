@@ -60,7 +60,7 @@
 			<token name="Style">0</token>
 			<BinaryString name="Tags"></BinaryString>
 			<bool name="Visible">true</bool>
-			<int name="ZIndex">1</int>
+			<int name="ZIndex">-2</int>
 		</Properties>
 	</Item>
 </roblox>
