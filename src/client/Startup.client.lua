@@ -358,6 +358,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
 	icon:setLabel("Pockets")
+	icon:setOrder(1)
 	icon:set("dropdownSquareCorners", true)
 	icon:set("dropdownMaxIconsBeforeScroll", 10)
 	icon:setDropdown({
