@@ -29,7 +29,6 @@ local CreatePocketEvent = Common.Remotes.CreatePocket
 local FirePortalEvent = Common.Remotes.FirePortal
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
 local LinkPocketEvent = Common.Remotes.LinkPocket
-local IsPocketRemoteFunction = Common.Remotes.IsPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 local PocketsForPlayerRemoteFunction = Common.Remotes.PocketsForPlayer
 local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
@@ -96,7 +95,6 @@ function MetaPortal.Init()
 	TeleportService.TeleportInitFailed:Connect(MetaPortal.TeleportFailed)
 	CreatePocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocket)
 	LinkPocketEvent.OnServerEvent:Connect(MetaPortal.CreatePocketLink)
-	IsPocketRemoteFunction.OnServerInvoke = isPocket
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
 	UnlinkPortalRemoteEvent.OnServerEvent:Connect(MetaPortal.UnlinkPortal)
 	PocketsForPlayerRemoteFunction.OnServerInvoke = MetaPortal.PocketsForPlayer
@@ -494,6 +492,9 @@ function MetaPortal.InitPocket(data)
 	
 	MetaPortal.PocketData = pocketData
 	MetaPortal.PocketInit = true
+
+	-- TODO remove dependence on creatorValue above
+	Common:SetAttribute("PocketCreatorId", pocketData.CreatorId)
 	
 	MetaPortal.InitPocketPortals()
 end
@@ -1062,16 +1063,25 @@ function MetaPortal.UnlinkPortal(plr, portal)
 		return
 	end
 
+	local isAdmin = plr:GetAttribute("metaadmin_isadmin")
+	local canUnlink = false
+
 	if isPocket() then
-		if plr.UserId ~= portal.CreatorId.Value and plr.UserId ~= MetaPortal.PocketData.CreatorId then
-			print("[MetaPortal] Player does not have permission to unlink this portal")
-			return
-		end
+		-- In a pocket you can unlink a portal if you created it, you
+		-- own the pocket, or you have admin privileges
+		canUnlink = (plr.UserId == portal.CreatorId.Value) or
+					(plr.UserId == MetaPortal.PocketData.CreatorId) or
+					isAdmin
 	else
-		if plr.UserId ~= portal.CreatorId.Value then
-			print("[MetaPortal] Player attempted to unlink portal they did not create")
-			return
-		end
+		-- Outside of a pocket, you can unlink a portal if you created it
+		-- or you are an admin
+		canUnlink = (plr.UserId == portal.CreatorId.Value) or
+					isAdmin
+	end
+
+	if not canUnlink then
+		print("[MetaPortal] Player does not have permission to unlink this portal")
+		return
 	end
 
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)

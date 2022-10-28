@@ -19,7 +19,6 @@ local GotoEvent = Common.Remotes.Goto
 local AddGhostEvent = Common.Remotes.AddGhost
 local FirePortalEvent = Common.Remotes.FirePortal
 local ReturnToLastPocketEvent = Common.Remotes.ReturnToLastPocket
-local IsPocketRemoteFunction = Common.Remotes.IsPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
 
@@ -189,15 +188,35 @@ if localCharacter then
 	end
 end
 
+local function canUnlinkPortal(portal)
+	local isPocket = Common:GetAttribute("IsPocket")
+	local pocketCreatorId = Common:GetAttribute("PocketCreatorId")
+	local isAdmin = localPlayer:GetAttribute("metaadmin_isadmin")
+	local canUnlink = false
+
+	if isPocket then
+		-- In a pocket you can unlink a portal if you created it, you
+		-- own the pocket, or you have admin privileges
+		canUnlink = (localPlayer.UserId == portal.CreatorId.Value) or
+					(localPlayer.UserId == pocketCreatorId) or
+					isAdmin
+	else
+		-- Outside of a pocket, you can unlink a portal if you created it
+		-- or you are an admin
+		canUnlink = (localPlayer.UserId == portal.CreatorId.Value) or
+					isAdmin
+	end
+
+	return canUnlink
+end
+
 local function EndUnlinkPortalMode()
 	local portals = CollectionService:GetTagged(Config.PortalTag)
 
 	for _, portal in ipairs(portals) do
 		if portal:FindFirstChild("CreatorId") == nil then continue end
 
-		if portal.CreatorId.Value ~= localPlayer.UserId then
-			continue
-		end
+		if not canUnlinkPortal(portal) then continue end
 
 		local c = portal:FindFirstChild("ClickTargetClone")
 		if c ~= nil then
@@ -296,14 +315,11 @@ local function StartUnlinkPortalMode()
 	screenGui.Parent = localPlayer.PlayerGui
 
 	local portals = CollectionService:GetTagged(Config.PortalTag)
-	local isPocket = IsPocketRemoteFunction:InvokeServer()
 
 	for _, portal in ipairs(portals) do
 		if portal:FindFirstChild("CreatorId") == nil then continue end
 
-		if localPlayer.UserId ~= portal.CreatorId.Value then
-			continue
-		end
+		if not canUnlinkPortal(portal) then continue end
 
 		local teleportPart = portal.PrimaryPart
 		local clickClone = teleportPart:Clone()
