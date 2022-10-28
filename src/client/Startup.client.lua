@@ -379,21 +379,23 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	icon:set("dropdownMaxIconsBeforeScroll", 10)
 	icon:setDropdown({
 		Icon.new()
-		:setLabel(locationName)
-		:lock(),
+			:setLabel(locationName)
+			:lock()
+			:set("iconBackgroundTransparency", 1),
 		Icon.new()
-		:setLabel("Goto Pocket...")
-		:bindEvent("selected", function(self)
-			self:deselect()
-			icon:deselect()
-			gotoPortalGui.Enabled = true
-			wait(0.1)
-			gotoPortalGui.Frame.TextBox:CaptureFocus()
-		end)
-		:bindEvent("deselected", function(self)
-			gotoPortalGui.Enabled = false
-		end)
-		:bindToggleKey(Config.ShortcutKey),
+			:setLabel("Goto Pocket...")
+			:bindEvent("selected", function(self)
+				self:deselect()
+				icon:deselect()
+				gotoPortalGui.Enabled = true
+				wait(0.1)
+				gotoPortalGui.Frame.TextBox:CaptureFocus()
+			end)
+			:bindEvent("deselected", function(self)
+				gotoPortalGui.Enabled = false
+			end)
+			:setTip("Goto Pocket (K)")
+			:bindToggleKey(Config.ShortcutKey),
 		Icon.new()
 		:setLabel("Unlink Portal...")
 		:bindEvent("selected", function(self)
