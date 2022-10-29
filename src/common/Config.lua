@@ -1,5 +1,6 @@
 local Config = {
 	PortalTag = "metaportal",
+	PortalPartTag = "metaportal_part",
 	PocketTag = "metapocket",
 	PocketDataStoreTag = "metapocket",
 	DataStoreTag = "metaportal",

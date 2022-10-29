@@ -548,6 +548,9 @@ function MetaPortal.InitPortal(portal)
 	fire.Size = 5
 	fire.Parent = teleportPart
 	
+	-- For game streaming
+	CollectionService:AddTag(portal.PrimaryPart, Config.PortalPartTag)
+	
 	-- NOTE: Attaching touch events is now done on the client
 end
 

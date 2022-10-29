@@ -75,13 +75,31 @@ SetTeleportGuiRemoteEvent.OnClientEvent:Connect(function(pocket)
 	end
 end)
 
-local function InitPortal(portal)
-	local teleportPart = portal.PrimaryPart
-	if teleportPart == nil then
-		print("[MetaPortal] Attempting to init portal with nil PrimaryPart")
+local function InitPortalPart(portalPart)
+	-- Look for a portal with this primary part (keeping in mind that this part
+	-- may have streamed in before the PrimaryPart is set on that model)
+	local parentPortal = nil
+
+	for _, portal in CollectionService:GetTagged(Config.PortalTag) do
+		if portalPart:IsDescendantOf(portal) then
+			if portal.PrimaryPart == portalPart then
+				parentPortal = portal
+				break
+			elseif portal.PrimaryPart == nil then
+				wait(1)
+				if portal.PrimaryPart == portalPart then
+					parentPortal = portal
+					break
+				end
+			end
+		end
+	end
+
+	if parentPortal == nil then
+		print("[MetaPortal] Could not add touch events for portal")
 		return
 	end
-	
+
 	local db = false -- debounce
 	local function onTeleportTouch(otherPart)
 		if not otherPart then return end
@@ -103,7 +121,7 @@ local function InitPortal(portal)
 				db = true
 				local plr = Players:GetPlayerFromCharacter(otherPart.Parent)
 				if plr and plr == localPlayer and not plr.PlayerGui:FindFirstChild("TeleportScreenGui") then	
-					teleportPart.Sound:Play()
+					if portalPart:FindFirstChild("Sound") ~= nil then portalPart.Sound:Play() end
 					
 					for _, desc in ipairs(plr.Character:GetDescendants()) do
 						if desc:IsA("BasePart") then
@@ -113,35 +131,38 @@ local function InitPortal(portal)
 					end
 					
 					-- Don't put up this GUI for pockets
-					if not CollectionService:HasTag(portal, "metapocket") then
+					if not CollectionService:HasTag(parentPortal, "metapocket") then
 						teleportScreenGui.Parent = localPlayer.PlayerGui	
 					end
 					
-					FirePortalEvent:FireServer(portal)
+					FirePortalEvent:FireServer(parentPortal)
 				end
 				wait(20)
 				db = false
 			end
 		end
 	end
-	local connection = teleportPart.Touched:Connect(onTeleportTouch)
-	portalTouchedConnections[portal] = connection
+
+	local connection = portalPart.Touched:Connect(onTeleportTouch)
+	portalTouchedConnections[portalPart] = connection
 end
 
 local portals = CollectionService:GetTagged(Config.PortalTag)
 
 for _, portal in ipairs(portals) do
-	InitPortal(portal)
+	if portal.PrimaryPart ~= nil then
+		InitPortalPart(portal.PrimaryPart)
+	end
 end
 
-CollectionService:GetInstanceAddedSignal(Config.PortalTag):Connect(function(portal)
-	InitPortal(portal)
+CollectionService:GetInstanceAddedSignal(Config.PortalPartTag):Connect(function(portalPart)
+	InitPortalPart(portalPart)
 end)
 
-CollectionService:GetInstanceRemovedSignal(Config.PortalTag):Connect(function(portal)
-	if portalTouchedConnections[portal] ~= nil then
-		portalTouchedConnections[portal]:Disconnect()
-		portalTouchedConnections[portal] = nil
+CollectionService:GetInstanceRemovedSignal(Config.PortalPartTag):Connect(function(portalPart)
+	if portalTouchedConnections[portalPart] ~= nil then
+		portalTouchedConnections[portalPart]:Disconnect()
+		portalTouchedConnections[portalPart] = nil
 	end
 end)
 
