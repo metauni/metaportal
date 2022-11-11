@@ -66,8 +66,14 @@ local function showLinkGui()
 			textButton.TextXAlignment = Enum.TextXAlignment.Left
 			textButton.Parent = scrollingFrame
 
+
 			local pocketName = pocketNameFromPlaceId(pocketData.PlaceId)
-			pocketName = pocketName .. " " .. pocketData.PocketCounter
+			if pocketName == nil or pocketData.PocketCounter == nil then
+				pocketName = ""
+			else
+				pocketName = pocketName .. " " .. pocketData.PocketCounter
+			end
+			
 			textButton.Text = pocketName
 			
 			textButton.Activated:Connect(function()

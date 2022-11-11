@@ -366,10 +366,6 @@ local function StartUnlinkPortalMode()
 	end
 end
 
-local function returnToRisingSea()
-
-end
-
 -- Create the menu items
 -- icon is https://fonts.google.com/icons?icon.query=door
 if ReplicatedStorage:FindFirstChild("Icon") then

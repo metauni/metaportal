@@ -1056,11 +1056,6 @@ function MetaPortal.InitPocketPortal(portal)
 end
 
 function MetaPortal.UnlinkPortal(plr, portal)
-	if portal == nil then
-		print("[MetaPortal] Attempted to unlink nil portal")
-		return
-	end
-
 	if portal:FindFirstChild("CreatorId") == nil or portal.CreatorId.Value == nil then
 		print("[MetaPortal] Attempt to unlink malformed portal")
 		return
@@ -1122,7 +1117,8 @@ function MetaPortal.UnlinkPortal(plr, portal)
 	portal.IsOpen.Value = false
 	portal.CreatorId:Destroy()
 
-	CollectionService:RemoveTag(portal, "metaportal")
+	CollectionService:RemoveTag(portal, Config.PortalTag)
+	CollectionService:RemoveTag(portal.PrimaryPart, Config.PortalPartTag)
 
 	MetaPortal.ConnectBlankPocketPortalTouched(portal)
 end
