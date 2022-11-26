@@ -32,6 +32,7 @@ local LinkPocketEvent = Common.Remotes.LinkPocket
 local UnlinkPortalRemoteEvent = Common.Remotes.UnlinkPortal
 local PocketsForPlayerRemoteFunction = Common.Remotes.PocketsForPlayer
 local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
+local GetLaunchDataRemoteFunction = Common.Remotes.GetLaunchData
 
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
@@ -74,8 +75,6 @@ function MetaPortal.Init()
 		MetaPortal.InitPocketPortals()
 	end
 	
-	--ArriveRemoteEvent.OnServerEvent:Connect(MetaPortal.PlayerArrive)
-
 	Players.PlayerAdded:Connect(function(plr)
 		MetaPortal.PlayerArrive(plr)
 	end)
@@ -98,11 +97,28 @@ function MetaPortal.Init()
 	ReturnToLastPocketEvent.OnServerEvent:Connect(MetaPortal.ReturnToLastPocket)
 	UnlinkPortalRemoteEvent.OnServerEvent:Connect(MetaPortal.UnlinkPortal)
 	PocketsForPlayerRemoteFunction.OnServerInvoke = MetaPortal.PocketsForPlayer
+	GetLaunchDataRemoteFunction.OnServerInvoke = MetaPortal.GetLaunchData
 
 	local versionValue = script.Parent:FindFirstChild("version")
 	local ver = versionValue and versionValue.Value or ""
 
 	print("[MetaPortal] "..ver.." initialised")
+end
+
+function MetaPortal.GetLaunchData(plr)
+	local joinData = plr:GetJoinData()
+
+	-- Workaround for current bug in LaunchData
+	local ignoreLaunchData = false
+	if joinData.TeleportData ~= nil and joinData.TeleportData.IgnoreLaunchData ~= nil then
+		ignoreLaunchData = joinData.TeleportData.IgnoreLaunchData
+	end
+
+	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
+		return joinData.LaunchData
+	end
+
+	return nil
 end
 
 local pocketsForPlayerCache = {}
@@ -1127,12 +1143,8 @@ end
 -- this may not fire if we Init after the event has been fired
 function MetaPortal.PlayerArrive(plr)
 	local joinData = plr:GetJoinData()
-	if joinData == nil then
-		print("[MetaPortal] Got nil joinData")
-		return
-	end
-
 	local teleportData = joinData.TeleportData
+
 	if teleportData ~= nil then
 		MetaPortal.TeleportData[plr.UserId] = teleportData
 	end
@@ -1156,6 +1168,7 @@ function MetaPortal.PlayerArrive(plr)
 
 	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
 		local prefixStart, prefixEnd = string.find(joinData.LaunchData,"pocket:",1)
+
 		if prefixStart ~= nil then
 			local pocketName = string.sub(joinData.LaunchData,prefixEnd+1,-1)
 			if pocketName ~= nil and pocketName ~= "" then
@@ -1163,7 +1176,6 @@ function MetaPortal.PlayerArrive(plr)
 
 				local passThrough = true
 				MetaPortal.GotoPocketHandler(plr, pocketName, passThrough)		
-				return
 			end
 		end
 	end

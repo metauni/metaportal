@@ -42,6 +42,10 @@
 			"ClassName": "RemoteFunction"
 		},
 		{
+			"Name": "GetLaunchData",
+			"ClassName": "RemoteFunction"
+		},
+		{
 			"Name": "SetTeleportGui",
 			"ClassName": "RemoteEvent"
 		}
