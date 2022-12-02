@@ -177,9 +177,7 @@ if localCharacter then
 				if pocket:FindFirstChild("PersistId") then
 					if pocket.PersistId.Value == teleportData.TargetPersistId then
 						local newCFrame = pocket:GetPivot() * CFrame.new(0, 0, -10)
-						
-						wait(0.1)
-						
+						localCharacter:WaitForChild("PrimaryPart")
 						localCharacter.PrimaryPart:PivotTo(newCFrame)
 					end
 				end
