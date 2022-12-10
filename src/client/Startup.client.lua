@@ -356,6 +356,7 @@ local function StartUnlinkPortalMode()
 		clickClone.CFrame = teleportPart.CFrame + teleportPart.CFrame.LookVector * 1
 
 		local clickDetector = Instance.new("ClickDetector")
+        clickDetector.MaxActivationDistance = 500
 		clickDetector.Parent = clickClone
 		clickDetector.MouseClick:Connect(function()
 			UnlinkPortalRemoteEvent:FireServer(portal)
