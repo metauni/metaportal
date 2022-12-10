@@ -58,7 +58,7 @@ local function StartBoardURLDisplay(boardPersistId)
 	textBox.Position = UDim2.new(0.5,-400,0.5,-100)
 	textBox.TextColor3 = Color3.new(1,1,1)
 	textBox.TextSize = 20
-	textBox.Text = "http://metauniservice.com:8080/?" .. dataString
+	textBox.Text = ":8080/?" .. dataString -- prepend http://metauniservice.com
 	textBox.TextWrapped = true
 	textBox.TextEditable = false
 	textBox.ClearTextOnFocus = false
