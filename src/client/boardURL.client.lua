@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Common = ReplicatedStorage.MetaPortalCommon
 
 local localPlayer = Players.LocalPlayer
 
@@ -34,16 +35,15 @@ local function StartBoardURLDisplay(boardPersistId)
 	-- if we are not in a pocket, then we just specify boardPersistId,
 	-- if we are in a pocket we also need to include the pocketId
 	
-	local metaPortal = ServerScriptService:FindFirstChild("metaportal")
 	local dataString
 	
-	if metaPortal and game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0 then
-
-		if metaPortal:GetAttribute("PocketId") == nil then
-			metaPortal:GetAttributeChangedSignal("PocketId"):Wait()
+    local isPocket = Common:GetAttribute("IsPocket")
+	if isPocket then
+		if Common:GetAttribute("PocketId") == nil then
+			Common:GetAttributeChangedSignal("PocketId"):Wait()
 		end
 
-		local pocketId = metaPortal:GetAttribute("PocketId")
+		local pocketId = Common:GetAttribute("PocketId")
 
 		dataString = "pocketId=" .. pocketId .. "&boardPersistId=" .. boardPersistId
 	else
