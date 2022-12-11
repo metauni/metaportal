@@ -54,7 +54,7 @@ local function StartBoardURLDisplay(boardPersistId)
 	textBox.Name = "TextBox"
 	textBox.BackgroundColor3 = Color3.new(0,0,0)
 	textBox.BackgroundTransparency = 0.3
-	textBox.Size = UDim2.new(0,800,0,200)
+	textBox.Size = UDim2.new(0,400,0,150)
 	textBox.Position = UDim2.new(0.5,-400,0.5,-100)
 	textBox.TextColor3 = Color3.new(1,1,1)
 	textBox.TextSize = 20
@@ -172,7 +172,7 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	icon:set("dropdownMaxIconsBeforeScroll", 10)
 	icon:setDropdown({
 		Icon.new()
-		:setLabel("URL for board...")
+		:setLabel("Key for Board...")
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()
