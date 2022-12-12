@@ -177,12 +177,30 @@ if localCharacter then
 				if pocket:FindFirstChild("PersistId") then
 					if pocket.PersistId.Value == teleportData.TargetPersistId then
 						local newCFrame = pocket:GetPivot() * CFrame.new(0, 0, -10)
-						localCharacter:WaitForChild("PrimaryPart")
-						localCharacter.PrimaryPart:PivotTo(newCFrame)
+						localCharacter:WaitForChild("HumanoidRootPart")
+						localCharacter.HumanoidRootPart:PivotTo(newCFrame)
 					end
 				end
 			end
 		end
+
+        if teleportData.TargetBoardPersistId then
+            print("[MetaPortal] Arrived with TargetBoardPersistId " .. teleportData.TargetBoardPersistId)
+            -- Look for the board with this PersistId
+			local boards = CollectionService:GetTagged("metaboard")
+
+			for _, board in boards do
+				if board:FindFirstChild("PersistId") then
+					if board.PersistId.Value == tonumber(teleportData.TargetBoardPersistId) then
+                        local boardPart = if board:IsA("Model") then board.PrimaryPart else board
+						local offsetCFrame = boardPart.CFrame * CFrame.new(0, 0, -10)
+                        local newCFrame = CFrame.lookAt(offsetCFrame.Position, boardPart.Position)
+                        localCharacter:WaitForChild("HumanoidRootPart")
+						localCharacter.HumanoidRootPart:PivotTo(newCFrame)
+					end
+				end
+			end
+        end
 	
 		local start = game.Workspace:FindFirstChild("Start")
 		
@@ -281,7 +299,7 @@ local function StartPocketURLMode()
 	textBox.Position = UDim2.new(0.5,-400,0.5,-100)
 	textBox.TextColor3 = Color3.new(1,1,1)
 	textBox.TextSize = 20
-	textBox.Text = "https://www.roblox.com/games/start?placeId=" .. Config.RootPlaceId .. "&launchData=pocket:" .. pocketName
+	textBox.Text = "https://www.roblox.com/games/start?placeId=" .. Config.RootPlaceId .. "&launchData=pocket%3A" .. pocketName
 	textBox.TextWrapped = true
 	textBox.TextEditable = false
 	textBox.ClearTextOnFocus = false

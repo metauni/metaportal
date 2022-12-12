@@ -210,7 +210,7 @@ end
 
 -- passThrough means we are handing a player off to a pocket, and don't
 -- want to make a ghost or show the interstitial GUI
-function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough)
+function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough, targetBoardPersistId)
 	if passThrough == nil then passThrough = false end
 	if plr == nil then
 		print("[MetaPortal] Passed nil player to GotoPocket")
@@ -220,7 +220,7 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 	-- Set the teleportGUI on the client
 	local pocketName = MetaPortal.PocketTemplateNameFromPlaceId(placeId) .. " " .. pocketCounter
 	SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
-	wait(1) -- let the local teleport GUI get set
+	-- wait(0.1) -- let the local teleport GUI get set
 
 	local character = plr.Character
 
@@ -280,8 +280,11 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 		OriginPlaceId = game.PlaceId,
 		OriginJobId = game.JobId,
 		PocketCounter = pocketCounter,
-		AccessCode = accessCode,
+		AccessCode = accessCode
 	}
+    if targetBoardPersistId ~= nil then
+        teleportData.TargetBoardPersistId = targetBoardPersistId
+    end
 
 	-- Workaround for current bug in LaunchData
 	local joinData = plr:GetJoinData()
@@ -396,7 +399,7 @@ function MetaPortal.PocketDataFromPocketName(pocketText)
 	return placeId, pocketData
 end
 
-function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
+function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough, targetBoardPersistId)
 	if pocketText == "The Rising Sea" then
 		MetaPortal.ReturnToRoot(plr)
 	end
@@ -417,7 +420,7 @@ function MetaPortal.GotoPocketHandler(plr, pocketText, passThrough)
 		end
 	end
 
-	MetaPortal.GotoPocket(plr, placeId, pocketData.PocketCounter, pocketData.AccessCode, passThrough)
+	MetaPortal.GotoPocket(plr, placeId, pocketData.PocketCounter, pocketData.AccessCode, passThrough, targetBoardPersistId)
 end
 
 function MetaPortal.InitPocketPortals()
@@ -1167,15 +1170,34 @@ function MetaPortal.PlayerArrive(plr)
 	end
 
 	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
-		local prefixStart, prefixEnd = string.find(joinData.LaunchData,"pocket:",1)
+        local function processQuery(queryString)
+            local q = {}
+            -- The strings are "-"-separated "key:value" pairs
+            for _, pair in string.split(queryString, "-") do
+                local s = string.split(pair, ":")
+                if s ~= nil and #s == 2 then
+                    q[s[1]] = s[2]
+                end
+            end
+            return q
+        end
 
-		if prefixStart ~= nil then
-			local pocketName = string.sub(joinData.LaunchData,prefixEnd+1,-1)
+        local queryDict = processQuery(joinData.LaunchData)
+
+        -- TODO: Currently if you spawn into TRS with a target board we won't help you
+		if queryDict["pocket"] ~= nil then
+			local pocketName = queryDict["pocket"]
 			if pocketName ~= nil and pocketName ~= "" then
 				print("[MetaPortal] User "..plr.DisplayName.." arrived with pocket launch data "..pocketName)
 
 				local passThrough = true
-				MetaPortal.GotoPocketHandler(plr, pocketName, passThrough)		
+                if queryDict["targetBoardPersistId"] ~= nil then
+                    local targetBoard = queryDict["targetBoardPersistId"]
+                    print("[MetaPortal] User arrived with target board "..targetBoard)
+                    MetaPortal.GotoPocketHandler(plr, pocketName, passThrough, targetBoard)
+                else
+				    MetaPortal.GotoPocketHandler(plr, pocketName, passThrough)		
+                end
 			end
 		end
 	end

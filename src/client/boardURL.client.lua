@@ -45,7 +45,7 @@ local function StartBoardURLDisplay(boardPersistId)
 
 		local pocketId = Common:GetAttribute("PocketId")
 
-		dataString = pocketId .. ":" .. boardPersistId
+		dataString = pocketId .. "-" .. boardPersistId
 	else
 		dataString = boardPersistId
 	end
@@ -54,8 +54,8 @@ local function StartBoardURLDisplay(boardPersistId)
 	textBox.Name = "TextBox"
 	textBox.BackgroundColor3 = Color3.new(0,0,0)
 	textBox.BackgroundTransparency = 0.3
-	textBox.Size = UDim2.new(0,400,0,150)
-	textBox.Position = UDim2.new(0.5,-400,0.5,-100)
+	textBox.Size = UDim2.new(0,600,0,200)
+	textBox.Position = UDim2.new(0.5,-300,0.5,-100)
 	textBox.TextColor3 = Color3.new(1,1,1)
 	textBox.TextSize = 20
 	textBox.Text = dataString -- prepend http://metauniservice.com:8080/?boardPersistId={}&pocketId={}
