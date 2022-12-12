@@ -4,17 +4,21 @@ local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Common = ReplicatedStorage.MetaPortalCommon
+local Config = require(Common.Config)
 
 local localPlayer = Players.LocalPlayer
 
 local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
 
-local function StartBoardURLDisplay(boardPersistId)
-	local screenGui = localPlayer.PlayerGui:FindFirstChild("BoardURLDisplay")
-	if screenGui ~= nil then return end
+local modalGuiActive = false
 
+-- displayType is "key" or "URL"
+local function StartDisplay(boardPersistId, displayType)
+    if modalGuiActive then return end
+    modalGuiActive = true
+	
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "BoardURLDisplay"
+	screenGui.Name = "BoardDisplay"
 
 	local button = Instance.new("TextButton")
 	button.Name = "OKButton"
@@ -27,38 +31,55 @@ local function StartBoardURLDisplay(boardPersistId)
 	button.TextSize = 25
 	button.Text = "OK"
 	button.Activated:Connect(function()
+        modalGuiActive = false
 		screenGui:Destroy()
 	end)
 	Instance.new("UICorner").Parent = button
 	
-	-- The URL for a board depends on whether we are in a pocket or not
-	-- if we are not in a pocket, then we just specify boardPersistId,
-	-- if we are in a pocket we also need to include the pocketId
-	
 	local dataString
-	
-    local isPocket = Common:GetAttribute("IsPocket")
-	if isPocket then
-		if Common:GetAttribute("PocketId") == nil then
-			Common:GetAttributeChangedSignal("PocketId"):Wait()
-		end
+	local displayWidth
 
-		local pocketId = Common:GetAttribute("PocketId")
+    if displayType == "key" then
+        displayWidth = 600
+        local isPocket = Common:GetAttribute("IsPocket")
+        if isPocket then
+            if Common:GetAttribute("PocketId") == nil then
+                Common:GetAttributeChangedSignal("PocketId"):Wait()
+            end
 
-		dataString = pocketId .. "-" .. boardPersistId
-	else
-		dataString = boardPersistId
-	end
+            local pocketId = Common:GetAttribute("PocketId")
+
+            dataString = pocketId .. "-" .. boardPersistId
+        else
+            dataString = boardPersistId
+        end
+    elseif displayType == "URL" then
+        displayWidth = 800
+
+        local isPocket = Common:GetAttribute("IsPocket")
+        if isPocket then
+            if Common:GetAttribute("PocketId") == nil then
+                Common:GetAttributeChangedSignal("PocketId"):Wait()
+            end
+            
+            local pocketName = HttpService:UrlEncode(Common:GetAttribute("PocketName"))
+            dataString = "https://www.roblox.com/games/start?placeId=" .. Config.RootPlaceId
+            dataString = dataString .. "&launchData=pocket%3A" .. pocketName
+            dataString = dataString .. "-targetBoardPersistId%3A" .. boardPersistId
+        else
+            dataString = "No URL available"
+        end
+    end
 
 	local textBox = Instance.new("TextBox")
 	textBox.Name = "TextBox"
 	textBox.BackgroundColor3 = Color3.new(0,0,0)
 	textBox.BackgroundTransparency = 0.3
-	textBox.Size = UDim2.new(0,600,0,200)
-	textBox.Position = UDim2.new(0.5,-300,0.5,-100)
+	textBox.Size = UDim2.new(0,displayWidth,0,200)
+	textBox.Position = UDim2.new(0.5,-0.5 * displayWidth,0.5,-100)
 	textBox.TextColor3 = Color3.new(1,1,1)
 	textBox.TextSize = 20
-	textBox.Text = dataString -- prepend http://metauniservice.com:8080/?boardPersistId={}&pocketId={}
+	textBox.Text = dataString
 	textBox.TextWrapped = true
 	textBox.TextEditable = false
 	textBox.ClearTextOnFocus = false
@@ -88,18 +109,22 @@ local function EndBoardSelectMode()
 		end
 	end
 
-	local screenGui = localPlayer.PlayerGui:FindFirstChild("BoardURLGui")
+	local screenGui = localPlayer.PlayerGui:FindFirstChild("BoardKeyGui")
 	if screenGui ~= nil then
 		screenGui:Destroy()
 	end
 end
 
-local function StartBoardSelectMode()
-	local screenGui = localPlayer.PlayerGui:FindFirstChild("BoardURLGui")
+local boardSelectModeActive = false
+
+local function StartBoardSelectMode(onBoardSelected, displayType)
+    if boardSelectModeActive then return end
+
+	local screenGui = localPlayer.PlayerGui:FindFirstChild("BoardKeyGui")
 	if screenGui ~= nil then return end
 
 	local screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "BoardURLGui"
+	screenGui.Name = "BoardKeyGui"
 
 	local cancelButton = Instance.new("TextButton")
 	cancelButton.Name = "CancelButton"
@@ -113,6 +138,7 @@ local function StartBoardSelectMode()
 	cancelButton.Activated:Connect(function()
 		EndBoardSelectMode()
 		screenGui:Destroy()
+        boardSelectModeActive = false
 	end)
 	Instance.new("UICorner").Parent = cancelButton
 
@@ -154,10 +180,13 @@ local function StartBoardSelectMode()
 		clickDetector.MaxActivationDistance = 500
 		clickDetector.Parent = clickClone
 		clickDetector.MouseClick:Connect(function()
-			StartBoardURLDisplay(board.PersistId.Value)
+			onBoardSelected(board.PersistId.Value, displayType)
+            boardSelectModeActive = false
 			EndBoardSelectMode()
 		end)
 	end
+
+    boardSelectModeActive = true
 end
 
 if ReplicatedStorage:FindFirstChild("Icon") then
@@ -176,7 +205,14 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 		:bindEvent("selected", function(self)
 			self:deselect()
 			icon:deselect()
-			StartBoardSelectMode()
+			StartBoardSelectMode(StartDisplay, "key")
+		end),
+        Icon.new()
+		:setLabel("URL for Board...")
+		:bindEvent("selected", function(self)
+			self:deselect()
+			icon:deselect()
+			StartBoardSelectMode(StartDisplay, "URL")
 		end)
 	}) 
 
