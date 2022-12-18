@@ -103,6 +103,8 @@ local function EndBoardSelectMode()
 		if board:FindFirstChild("PersistId") == nil then continue end
 		
 		local boardPart = if board:IsA("Model") then board.PrimaryPart else board
+        if boardPart == nil then continue end -- perhaps due to streaming
+        
 		local c = boardPart:FindFirstChild("ClickTargetClone")
 		if c ~= nil then
 			c:Destroy()
@@ -161,7 +163,8 @@ local function StartBoardSelectMode(onBoardSelected, displayType)
 		if board:FindFirstChild("PersistId") == nil then continue end
 
 		local boardPart = if board:IsA("Model") then board.PrimaryPart else board
-		
+		if boardPart == nil then continue end -- perhaps due to streaming
+
 		local clickClone = boardPart:Clone()
 		for _, t in ipairs(CollectionService:GetTags(clickClone)) do
 			CollectionService:RemoveTag(clickClone, t)
