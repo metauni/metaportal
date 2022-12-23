@@ -21,9 +21,10 @@ local Config = {
 		["Between"] = 10302082510,
 		["Big Sir"] = 10914686380,
 		["Cstar Bridge"] = 11256938156,
-		["Tessell Tunes"] = 10323374140},
+		["Tessell Tunes"] = 10323374140,
+        ["Storyboard"] = 11893219541},
 	AvailablePockets = {
-		"Tessell Tunes",
+		"Storyboard",
 		"Delta Plains",
 		"Symbolic Wilds",
 		"Big Sir",
@@ -43,7 +44,8 @@ local Config = {
 		["Big Sir"] = "rbxassetid://10920372315",
 		["_PocketLink"] = "rbxassetid://10197036910",
 		["Cstar Bridge"] = "rbxassetid://11373448066",
-		["Tessell Tunes"] = "rbxassetid://11374780509"
+		["Tessell Tunes"] = "rbxassetid://11374780509",
+        ["Storyboard"] = "rbxassetid://11895995545"
 	},
 	PocketTeleportBackgrounds = {
 		["Alpha Cove"] = "rbxassetid://10089800875",
@@ -57,7 +59,8 @@ local Config = {
 		["Moonlight Forest"] = "rbxassetid://10503195169",
 		["Big Sir"] = "rbxassetid://10920332480",
 		["Cstar Bridge"] = "rbxassetid://11373442821",
-		["Tessell Tunes"] = "rbxassetid://11374783380"
+		["Tessell Tunes"] = "rbxassetid://11374783380",
+        ["Storyboard"] = "rbxassetid://11895985702"
 	}
 }
 
