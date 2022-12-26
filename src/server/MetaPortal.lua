@@ -16,10 +16,12 @@ local Players = game:GetService("Players")
 local HTTPService = game:GetService("HttpService")
 local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Requires
-local Common = game:GetService("ReplicatedStorage").MetaPortalCommon
+local Common = ReplicatedStorage.MetaPortalCommon
 local Config = require(Common.Config)
+local GameAnalytics = require(ReplicatedStorage.GameAnalytics)
 
 -- Remote Events
 local ArriveRemoteEvent = Common.Remotes.Arrive
@@ -282,6 +284,10 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 		PocketCounter = pocketCounter,
 		AccessCode = accessCode
 	}
+
+    -- Track players across pockets
+    teleportData = GameAnalytics:addGameAnalyticsTeleportData({plr.UserId}, teleportData)
+
     if targetBoardPersistId ~= nil then
         teleportData.TargetBoardPersistId = targetBoardPersistId
     end
@@ -585,6 +591,9 @@ function MetaPortal.ReturnToRoot(plr)
 		OriginJobId = game.JobId
 	}
 
+    -- Track players across pockets
+    teleportData = GameAnalytics:addGameAnalyticsTeleportData({plr.UserId}, teleportData)
+
 	local placeId = Config.RootPlaceId
 
 	-- Workaround for current bug in LaunchData
@@ -702,6 +711,9 @@ function MetaPortal.FirePortal(portal, plr)
 		teleportData.IgnoreLaunchData = joinData.TeleportData.IgnoreLaunchData
 	end
 	
+    -- Track players across pockets
+    teleportData = GameAnalytics:addGameAnalyticsTeleportData({plr.UserId}, teleportData)
+    
 	teleportOptions:SetTeleportData(teleportData)
 	
 	local success, errormessage = pcall(function()
