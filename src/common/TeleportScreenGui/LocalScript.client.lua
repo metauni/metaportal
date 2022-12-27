@@ -24,7 +24,8 @@ if VRService.VREnabled then return end
 
 StarterGui:SetCore("TopbarEnabled", false)
 
-local portalTarget = script.TeleportProgressScreenGui.Portal.Value
+--local portalTarget = script.TeleportProgressScreenGui.Portal.Value
+local portalTarget = nil
 
 if portalTarget == nil then
 	local target = Players.LocalPlayer.Character.PrimaryPart

@@ -36,6 +36,12 @@ local PocketsForPlayerRemoteFunction = Common.Remotes.PocketsForPlayer
 local SetTeleportGuiRemoteEvent = Common.Remotes.SetTeleportGui
 local GetLaunchDataRemoteFunction = Common.Remotes.GetLaunchData
 
+local function waitForBudget(requestType: Enum.DataStoreRequestType)
+	while DataStoreService:GetRequestBudgetForRequestType(requestType) <= 0 do
+		task.wait()
+	end
+end
+
 local ghosts = game.Workspace:FindFirstChild("MetaPortalGhostsFolder")
 
 if ghosts == nil then
@@ -60,9 +66,7 @@ function MetaPortal.Init()
 	MetaPortal.PocketData = nil
 	MetaPortal.PocketInitTouchConnections = {}
 	
-	-- Find all metaportals
 	local portals = CollectionService:GetTagged(Config.PortalTag)
-
 	for _, portal in ipairs(portals) do
 		MetaPortal.InitPortal(portal)
 	end
@@ -146,6 +150,7 @@ function MetaPortal.PocketsForPlayer(plr)
 
 	local playerKey = MetaPortal.KeyForUser(plr)
 	local success, pocketList = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.GetAsync)
 		return DataStore:GetAsync(playerKey)
 	end)
 	if not success then
@@ -175,6 +180,7 @@ function MetaPortal.ReturnToLastPocket(player)
 
 	local success, returnToPocketData
     success, returnToPocketData = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.GetAsync)
         return DataStore:GetAsync(returnToPocketKey)
     end)
     if not success then
@@ -217,15 +223,10 @@ end
 -- want to make a ghost or show the interstitial GUI
 function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThrough, targetBoardPersistId)
 	if passThrough == nil then passThrough = false end
-	if plr == nil then
-		print("[MetaPortal] Passed nil player to GotoPocket")
-		return
-	end
 
 	-- Set the teleportGUI on the client
 	local pocketName = MetaPortal.PocketTemplateNameFromPlaceId(placeId) .. " " .. pocketCounter
 	SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
-	-- wait(0.1) -- let the local teleport GUI get set
 
 	local character = plr.Character
 
@@ -343,6 +344,7 @@ function MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessC
 	}
 	local returnToPocketKey = "return_" .. plr.UserId
 	local success, errormessage = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.SetIncrementAsync)
 		return DataStore:SetAsync(returnToPocketKey, returnToPocketData)
 	end)
 	if not success then
@@ -391,6 +393,7 @@ function MetaPortal.PocketDataFromPocketName(pocketText)
 	
 	local success, pocketJSON
 	success, pocketJSON = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.GetAsync)
 		return DataStore:GetAsync(pocketKey)
 	end)
 	if not success then
@@ -455,11 +458,6 @@ end
 -- and by the integer PocketCounter, but we only have access to the
 -- latter from the person who created the pocket as they join it
 function MetaPortal.InitPocket(data)
-	if data == nil then
-		print("[MetaPortal] Attempted to initialise pocket with nil data")
-		return
-	end
-
 	local pocketCounter = data.PocketCounter
 	
 	if pocketCounter == nil then
@@ -483,6 +481,7 @@ function MetaPortal.InitPocket(data)
 
 	local success, pocketJSON
 	success, pocketJSON = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.GetAsync)
 		return DataStore:GetAsync(pocketKey)
 	end)
 	if not success then
@@ -490,23 +489,12 @@ function MetaPortal.InitPocket(data)
 		return
 	end
 	
-	local pocketData
-	if not pocketJSON then
-		-- This is the first time this pocket has started up
-		pocketData = {}
-		pocketData.PocketCounter = data.PocketCounter
-		pocketData.AccessCode = data.AccessCode
-		pocketData.CreatorId = data.CreatorId
-		pocketData.ParentPlaceId = data.ParentPlaceId
-		pocketData.ParentPocketCounter = data.ParentPocketCounter
-		pocketData.ParentAccessCode = data.ParentAccessCode
-		pocketData.ParentOriginPersistId = data.OriginPersistId
-		
-		local pocketJSON = HTTPService:JSONEncode(pocketData)
-		DataStore:SetAsync(pocketKey,pocketJSON)
-	else
-		pocketData = HTTPService:JSONDecode(pocketJSON)
-	end
+    if not pocketJSON then
+        print("[MetaPortal] Entered non-initialised pocket")
+        return
+    end
+
+	local pocketData = HTTPService:JSONDecode(pocketJSON)
 	
 	local creatorId = pocketData.CreatorId
 	if not creatorId then
@@ -655,12 +643,11 @@ function MetaPortal.FirePortal(portal, plr)
 	
 	-- If the portal leads to a pocket
 	if CollectionService:HasTag(portal, "metapocket") then
-		-- Set the teleportGUI on the client
 		local templateName = MetaPortal.PocketTemplateNameFromPlaceId(placeId)
 		if templateName ~= nil then
 			local pocketName = templateName .. " " .. portal.PocketCounter.Value
 			SetTeleportGuiRemoteEvent:FireClient(plr, pocketName)
-			wait(1) -- let the local teleport GUI get set
+			--wait(1) -- let the local teleport GUI get set
 		else
 			print("[MetaPortal] WARNING: Failed to get pocket name to set TeleportGui")
 		end
@@ -789,6 +776,7 @@ function MetaPortal.AddPocketToListForPlayer(plr, pocketData)
 
 	local playerKey = MetaPortal.KeyForUser(plr)
 	local success, updatedList = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.SetIncrementAsync)
 		return DataStore:UpdateAsync(playerKey, function(currentTable)
 			if currentTable == nil then return {} end
 
@@ -810,16 +798,6 @@ function MetaPortal.AddPocketToListForPlayer(plr, pocketData)
 end
 
 function MetaPortal.CreatePocket(plr, portal, pocketChosen)
-	if portal == nil then
-		print("[MetaPortal] CreatePocket passed a nil portal")
-		return
-	end
-	
-	if pocketChosen == nil then
-		print("[MetaPortal] Pocket chosen is nil")
-		return
-	end
-	
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 	local portalKey = MetaPortal.KeyForPortal(portal)
 	
@@ -833,6 +811,7 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 
 	-- Increment the counter for this place
 	local success, pocketCounter = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.SetIncrementAsync)
 		return DataStore:IncrementAsync(placeKey, 1)
 	end)
 	if success then
@@ -846,14 +825,32 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 		PocketName = plr.DisplayName,
 		PlaceId = placeId,
 		ParentPlaceId = game.PlaceId,
-		PocketCounter = pocketCounter
+		PocketCounter = pocketCounter,
+        ParentOriginPersistId = portal.PersistId.Value
 	}
 
+    if isPocket() then	
+        -- Pass along our identifying information so the sub-pocket can link back to us
+        pocketData.ParentPocketCounter = MetaPortal.PocketData.PocketCounter
+        pocketData.ParentAccessCode = MetaPortal.PocketData.AccessCode
+    end
+
 	local pocketJSON = HTTPService:JSONEncode(pocketData)
+    local pocketKey = MetaPortal.KeyForPocket(placeId, pocketCounter)
+
+    -- This DataStore entry _is_ the pocket
+    local success, errormessage = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.SetIncrementAsync)
+        return DataStore:SetAsync(pocketKey,pocketJSON)
+    end)
+    if not success then
+        print("[MetaPortal] SetAsync fail for " .. pocketKey .. " with ".. errormessage)
+        return
+    end
 
 	-- Store association between this portal and this pocket
-	local success, errormessage
-	success, errormessage = pcall(function()
+	local success, errormessage = pcall(function()
+        waitForBudget(Enum.DataStoreRequestType.SetIncrementAsync)
 		return DataStore:SetAsync(portalKey,pocketJSON)
 	end)
 	if not success then
@@ -1025,7 +1022,6 @@ function MetaPortal.ConnectBlankPocketPortalTouched(portal)
 				db = true
 				local plr = Players:GetPlayerFromCharacter(otherPart.Parent)
 				if plr then	
-					-- Check permissions
 					if not MetaPortal.HasPocketCreatePermission(plr) and not RunService:IsStudio() then
 						print("[MetaPortal] User is not authorised to make pockets")
 						wait(0.1)
