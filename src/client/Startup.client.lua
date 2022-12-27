@@ -194,7 +194,7 @@ if localCharacter then
 					if board.PersistId.Value == tonumber(teleportData.TargetBoardPersistId) then
                         local boardPart = if board:IsA("Model") then board.PrimaryPart else board
                         if boardPart == nil then continue end -- perhaps due to streaming
-                        
+
 						local offsetCFrame = boardPart.CFrame * CFrame.new(0, 0, -10)
                         local newCFrame = CFrame.lookAt(offsetCFrame.Position, boardPart.Position)
                         localCharacter:WaitForChild("HumanoidRootPart")
@@ -385,10 +385,8 @@ local function StartUnlinkPortalMode()
 	end
 end
 
--- Create the menu items
--- icon is https://fonts.google.com/icons?icon.query=door
-if ReplicatedStorage:FindFirstChild("Icon") then
-	local Icon = require(game:GetService("ReplicatedStorage").Icon)
+local function CreateTopbarItems()
+    local Icon = require(game:GetService("ReplicatedStorage").Icon)
 	local Themes =  require(game:GetService("ReplicatedStorage").Icon.Themes)
 	
 	if Common:GetAttribute("IsPocket") == nil then
@@ -405,7 +403,6 @@ if ReplicatedStorage:FindFirstChild("Icon") then
 	else
 		locationName = "At the root"
 	end
-
 	
 	local icon = Icon.new()
 	icon:setImage("rbxassetid://9277769559")
@@ -507,3 +504,5 @@ AddGhostEvent.OnClientEvent:Connect(function(ghost, pocketName, pocketCounter)
 		end
 	end)
 end)
+
+CreateTopbarItems()

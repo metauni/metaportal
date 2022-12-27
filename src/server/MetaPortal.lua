@@ -208,6 +208,9 @@ end
 function MetaPortal.TeleportFailed(player, teleportResult, errorMessage, placeId)
 	print("[MetaPortal] Teleport failed for "..player.Name.." to place "..placeId.." : "..errorMessage)
 	player:LoadCharacter()
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:TeleportFailed"
+    })
 end
 
 -- passThrough means we are handing a player off to a pocket, and don't
@@ -314,6 +317,10 @@ function MetaPortal.GotoPocket(plr, placeId, pocketCounter, accessCode, passThro
 	if not success then
 		print("[MetaPortal] TeleportAsync failed: ".. errormessage)
 	end
+
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:GotoPocket"
+    })
 end
 
 function MetaPortal.StoreReturnToPocketData(plr, placeId, pocketCounter, accessCode)
@@ -722,6 +729,10 @@ function MetaPortal.FirePortal(portal, plr)
 	if not success then
 		print("[MetaPortal] TeleportAsync failed: ".. errormessage)
 	end
+
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:FirePortal"
+    })
 end
 
 function MetaPortal.HasPocketCreatePermission(plr)
@@ -767,6 +778,10 @@ function MetaPortal.CreatePocketLink(plr, portal, pocketText)
 	if connection ~= nil then
 		connection:Disconnect()
 	end
+
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:CreatePocketLink"
+    })
 end
 
 function MetaPortal.AddPocketToListForPlayer(plr, pocketData)
@@ -845,6 +860,10 @@ function MetaPortal.CreatePocket(plr, portal, pocketChosen)
 		print("[MetaPortal] SetAsync fail for " .. portalKey .. " with ".. errormessage)
 		return
 	end
+
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:CreatePocket"
+    })
 
 	MetaPortal.AddPocketToListForPlayer(plr, pocketData)
 	MetaPortal.AttachValuesToPocketPortal(portal, pocketData)
@@ -1113,6 +1132,10 @@ function MetaPortal.UnlinkPortal(plr, portal)
 		return
 	end
 
+    GameAnalytics:addDesignEvent(plr.UserId, {
+        eventId = "Pockets:UnlinkPortal"
+    })
+
 	local DataStore = DataStoreService:GetDataStore(Config.PocketDataStoreTag)
 
 	-- Erase the contents stored for this portal
@@ -1182,6 +1205,10 @@ function MetaPortal.PlayerArrive(plr)
 	end
 
 	if joinData.LaunchData and joinData.LaunchData ~= "" and not ignoreLaunchData then
+        GameAnalytics:addDesignEvent(plr.UserId, {
+            eventId = "Pockets:LaunchData"
+        })
+
         local function processQuery(queryString)
             local q = {}
             -- The strings are "-"-separated "key:value" pairs
